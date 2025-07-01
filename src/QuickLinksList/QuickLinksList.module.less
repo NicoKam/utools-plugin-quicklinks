@@ -1,0 +1,59 @@
+.root {
+  position: relative;
+  display: flex;
+  height: 100vh;
+  --border-color: rgba(180, 180, 180, 0.3);
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .list {
+    overflow: auto;
+    height: 100%;
+    flex: 1;
+    flex-shrink: 0;
+
+    .empty {
+      padding: 12px;
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+    }
+
+    .item {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+
+      .name {
+        font-size: 16px;
+      }
+
+      .tips {
+        font-size: 12px;
+        color: #999;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &:hover {
+        background-color: rgba(180, 180, 180, 0.2);
+      }
+
+      &.selected {
+        background-color: rgba(180, 180, 180, 0.3);
+      }
+    }
+  }
+
+  .detail {
+    position: relative;
+    padding: 8px 12px;
+    flex-shrink: 0;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    border-left: 1px solid var(--border-color);
+  }
+}
