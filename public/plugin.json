@@ -1,0 +1,18 @@
+{
+  "main": "index.html",
+  "preload": "preload/services.js",
+  "logo": "logo.png",
+  "development": {
+    "main": "http://localhost:5173"
+  },
+  "features": [
+    {
+      "code": "quicklinks",
+      "explain": "快捷链接",
+      "cmds": [
+        "快捷链接",
+        "quicklinks"
+      ]
+    }
+  ]
+}
