@@ -108,7 +108,10 @@ export function useQuickLinksAccessDataItem() {
       if (data) {
         _setAccessData(prev => ({
           ...prev,
-          [id]: data,
+          [id]: {
+            ...prev[id],
+            ...data,
+          },
         }));
       } else {
         _setAccessData((prev) => {
