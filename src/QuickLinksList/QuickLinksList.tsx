@@ -246,11 +246,12 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         if (validateQuickLinks(json)) {
           if (result.importType === 'replace') {
             clearAccessData();
-            setData(json.map(item => ({
+            const newData = json.map(item => ({
               ...item,
               id: `quick_${randomString(12)}`,
-            })));
-            json.forEach((item) => {
+            }));
+            setData(newData);
+            newData.forEach((item) => {
               setAccessData(item.id, {
                 accessCount: 0,
                 createTime: Date.now(),
@@ -260,12 +261,18 @@ const QuickLinksList = (props: QuickLinksListProps) => {
           } else {
             const getKey = (item: IQuickLinksItem) => `${item.name}___${item.value}`;
             const exists = new Set(data.map(item => getKey(item)));
-            setData([
-              ...json.filter(item => !exists.has(getKey(item))).map(item => ({
-                ...item,
-                id: `quick_${randomString(12)}`,
-              })), ...data,
-            ]);
+            const newData = json.filter(item => !exists.has(getKey(item))).map(item => ({
+              ...item,
+              id: `quick_${randomString(12)}`,
+            }));
+            setData([...newData, ...data]);
+            newData.forEach((item) => {
+              setAccessData(item.id, {
+                accessCount: 0,
+                createTime: Date.now(),
+                updateTime: Date.now(),
+              });
+            });
           }
           message.success('导入成功');
         } else {
@@ -397,7 +404,12 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         )}
       </div>
 
-      <div className={styles.footer}>
+      <div
+        className={styles.footer}
+        onFocus={() => {
+          document.activeElement?.blur();
+        }}
+      >
         <Space size={2} split={<span className={styles.split} />}>
           <ButtonWithIcon icon={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
           <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
