@@ -1,11 +1,19 @@
 .root {
   position: relative;
   display: flex;
+  flex-direction: column;
   height: 100vh;
   --border-color: rgba(180, 180, 180, 0.3);
 
   * {
     box-sizing: border-box;
+  }
+
+  .center {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    border-top: 1px solid var(--border-color);
   }
 
   .list {
@@ -25,6 +33,17 @@
       padding: 8px 12px;
       border-bottom: 1px solid var(--border-color);
 
+      .itemContent {
+        flex: 1;
+      }
+
+      // 右侧的数字，用于
+      .itemTips {
+        font-size: 24px;
+        flex-shrink: 0;
+        color: rgba(180, 180, 180, 0.5);
+      }
+
       .name {
         font-size: 16px;
       }
@@ -38,22 +57,101 @@
       }
 
       &:hover {
-        background-color: rgba(180, 180, 180, 0.2);
+        background-color: rgba(200, 200, 200, 0.15);
       }
 
       &.selected {
-        background-color: rgba(180, 180, 180, 0.3);
+        background-color: rgba(200, 200, 200, 0.2);
       }
     }
   }
 
+  .row {
+    display: flex;
+    align-items: center;
+  }
+
   .detail {
     position: relative;
-    padding: 8px 12px;
     flex-shrink: 0;
     flex: 1;
     height: 100%;
     overflow: hidden;
     border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+
+    .preview {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      word-wrap: break-word;
+    }
+
+    .info {
+      flex-shrink: 0;
+      overflow: hidden;
+      padding: 2px 12px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+
+      .row {
+        width: 100%;
+        padding: 6px 0;
+
+        &:not(:last-child) {
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .rowTitle {
+          flex: 1;
+          color: #999;
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
+
+        .rowValue {
+          flex-shrink: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+
+  .footer {
+    background-color: rgba(180, 180, 180, 0.1);
+    height: 40px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 12px;
+  }
+}
+
+.empty {
+  color: #999;
+}
+
+.split {
+  color: #999;
+  height: 1.5em;
+  border-left: 1px solid var(--border-color);
+}
+
+.iconWithButton {
+  padding: 0px 4px;
+
+  .iconWithButtonIcon {
+    padding: 4px;
+    border-radius: 4px;
+    background-color: rgba(180, 180, 180, 0.2);
+    display: flex;
+    color: #999;
+    font-size: 12px;
+    line-height: 1em;
   }
 }

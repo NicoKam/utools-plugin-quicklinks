@@ -1,29 +1,45 @@
-import { useEffect, useState } from 'react'
-import Hello from './Hello'
-import Read from './Read'
-import QuickLinksList from './QuickLinksList'
+import { ConfigProvider, theme } from 'antd';
+import React, { useEffect, useState } from 'react';
+import QuickLinksList from './QuickLinksList';
+import Read from './Read';
+import useDarkThemeMode from './utils/useDarkThemeMode';
 
-export default function App() {
-  const [enterAction, setEnterAction] = useState({})
-  const [route, setRoute] = useState('quicklinks')
+const { darkAlgorithm } = theme;
+
+export function AppContent() {
+  const [enterAction, setEnterAction] = useState({});
+  const [route, setRoute] = useState('quicklinks');
 
   useEffect(() => {
     window.utools.onPluginEnter((action) => {
-      setRoute(action.code)
-      setEnterAction(action)
-    })
+      setRoute(action.code);
+      setEnterAction(action);
+    });
     window.utools.onPluginOut((isKill) => {
-      setRoute('')
-    })
-  }, [])
+      setRoute('');
+    });
+  }, []);
 
   if (route === 'quicklinks') {
-    return <QuickLinksList />
+    return <QuickLinksList />;
   }
 
   if (route === 'read') {
-    return <Read enterAction={enterAction} />
+    return <Read enterAction={enterAction} />;
   }
 
-  return false
+  return <>{null}</>;
 }
+
+export default function App() {
+  const darkMode = useDarkThemeMode();
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: darkMode ? darkAlgorithm : undefined,
+      }}
+    >
+      <AppContent />
+    </ConfigProvider>
+  );
+};
