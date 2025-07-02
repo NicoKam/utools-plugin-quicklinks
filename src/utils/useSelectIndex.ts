@@ -100,8 +100,6 @@ export function useSelectIndexWithKeyboard(options: UseSelectIndexOptions) {
 
   // 监听键盘事件，根据上下箭头键来增减索引
   useEventListener('keydown', (e) => {
-    e.preventDefault();
-    console.log(e);
     if (e.key === 'ArrowDown') {
       actions.increment();
     } else if (e.key === 'ArrowUp') {
