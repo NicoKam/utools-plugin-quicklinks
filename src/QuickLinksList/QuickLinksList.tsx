@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CopyOutlined, DeleteOutlined, EditOutlined, EnterOutlined, ImportOutlined, PlusOutlined } from '@ant-design/icons';
+import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Button, ButtonProps, Form, Input, message, Radio, Space } from 'antd';
@@ -8,14 +8,14 @@ import React, { useEffect, useMemo } from 'react';
 import DateTimeDisplay from '../components/DateTimeDisplay';
 import EnumDisplay from '../components/EnumDisplay';
 import FormModal from '../components/FormModal';
-import { IQuickLinksItem, setQuickLinksAccessData, useQuickLinksAccessDataItem, useQuickLinksDataState, validateQuickLinks } from '../storage';
+import { IQuickLinksItem, useQuickLinksAccessDataItem, useQuickLinksDataState, validateQuickLinks } from '../storage';
 import { randomString } from '../utils/randomString';
+import { useShortCutListener } from '../utils/shortcut';
 import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
+import useSecondaryConfirm from '../utils/useSencondaryConfirm';
 import useSubInput from '../utils/useSubInput';
 import { matchesFuzzy2 } from '../utils/vscode-utils/filters';
 import styles from './QuickLinksList.module.less';
-import useSecondaryConfirm from '../utils/useSencondaryConfirm';
-import { useShortCutListener } from '../utils/shortcut';
 
 const CmdKey = window.utools.isMacOS() ? 'Cmd' : 'Ctrl';
 
@@ -47,7 +47,7 @@ export interface QuickLinksListProps extends
 const QuickLinksList = (props: QuickLinksListProps) => {
   const { className = '', ...otherProps } = props;
 
-  const subInput = useSubInput();
+  const subInput = useSubInput({ placeholder: `搜索(${CmdKey}+F)` });
 
   const [data, setData] = useQuickLinksDataState();
   const [accessData, setAccessData, { clearAccessData }] = useQuickLinksAccessDataItem();
@@ -101,11 +101,13 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
         window.utools.hideMainWindowPasteText(currentItem.value);
-      } else {
+      } else if (window.services) {
         // links 打开浏览器
-        window.services.openUrl(currentItem.value);
+        window.utools.shellOpenExternal(currentItem.value);
         window.utools.outPlugin();
         window.utools.hideMainWindow();
+      } else {
+        message.error(`window.services empty: ${JSON.stringify(window.services)}`);
       }
       setAccessData(currentItem.id, {
         lastAccessTime: Date.now(),
@@ -120,7 +122,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
   const addOrEditItem = async (isEdit = false) => {
     const currentId = currentItem?.id;
-    const initialValue = isEdit ? currentItem : { type: 'links' };
+    const initialValue = isEdit ? currentItem : { type: 'link' };
     if (isEdit && !currentId) return;
 
     window.utools.subInputBlur();
@@ -133,7 +135,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         </Form.Item>
         <Form.Item name="type" label="类型">
           <Radio.Group>
-            <Radio.Button value="links">链接</Radio.Button>
+            <Radio.Button value="link">链接</Radio.Button>
             <Radio.Button value="snippet">文本片段</Radio.Button>
           </Radio.Group>
         </Form.Item>
@@ -142,8 +144,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             ({ getFieldValue }) => {
               const type = getFieldValue('type');
               return (
-                <Form.Item name="value" label="内容" rules={[{ required: true, message: type === 'links' ? '请输入链接' : '请输入文本片段' }]}>
-                  {type === 'links' ? <Input placeholder="请输入链接" /> : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
+                <Form.Item name="value" label="内容" rules={[{ required: true, message: type === 'link' ? '请输入链接' : '请输入文本片段' }]}>
+                  {type === 'link' ? <Input placeholder="请输入链接" /> : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
                 </Form.Item>
               );
             }
@@ -303,6 +305,12 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     if (e.target === document.body) removeItem();
   });
 
+  useShortCutListener(`${CmdKey}+F`, (e) => {
+    if (e.target === document.body) {
+      window.utools.subInputFocus();
+    }
+  });
+
   useShortCutListener('Escape', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -355,7 +363,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
                   <EnumDisplay
                     value={currentItem.type}
                     enums={[
-                      { value: 'links', text: '链接' },
+                      { value: 'link', text: '链接' },
                       { value: 'snippet', text: '文本片段' },
                     ]}
                     emptyHolder={<EmptyHolder />}
