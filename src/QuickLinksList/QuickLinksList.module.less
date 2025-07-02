@@ -17,7 +17,8 @@
   }
 
   .list {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     height: 100%;
     flex: 1;
     flex-shrink: 0;
@@ -30,11 +31,13 @@
     }
 
     .item {
+      overflow: hidden;
       padding: 8px 12px;
       border-bottom: 1px solid var(--border-color);
 
       .itemContent {
         flex: 1;
+        overflow: hidden;
       }
 
       // 右侧的数字，用于

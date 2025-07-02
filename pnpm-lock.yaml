@@ -29,9 +29,6 @@ dependencies:
   lodash-es:
     specifier: 4.17.21
     version: 4.17.21
-  opener:
-    specifier: 1.5.2
-    version: 1.5.2
   react:
     specifier: ^18.3.1
     version: 18.3.1
@@ -3429,11 +3426,6 @@ packages:
     dependencies:
       wrappy: 1.0.2
     dev: true
-
-  /opener@1.5.2:
-    resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
-    hasBin: true
-    dev: false
 
   /optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
