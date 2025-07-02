@@ -86,9 +86,12 @@
 
     .preview {
       flex: 1;
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
       padding: 12px;
-      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-family: monospace;
+      word-break: break-word;
     }
 
     .info {
