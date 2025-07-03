@@ -96,33 +96,8 @@
 
     .info {
       flex-shrink: 0;
-      overflow: hidden;
       padding: 2px 12px;
       border-top: 1px solid var(--border-color);
-      font-size: 12px;
-
-      .row {
-        width: 100%;
-        padding: 6px 0;
-
-        &:not(:last-child) {
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .rowTitle {
-          flex: 1;
-          color: #999;
-          flex-shrink: 0;
-          white-space: nowrap;
-        }
-
-        .rowValue {
-          flex-shrink: 0;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
     }
   }
 
@@ -136,10 +111,6 @@
     gap: 4px;
     padding: 0 12px;
   }
-}
-
-.empty {
-  color: #999;
 }
 
 .split {
