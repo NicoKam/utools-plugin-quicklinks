@@ -1,5 +1,6 @@
 import { get } from 'lodash-es';
 import { useEffect, useMemo } from 'react';
+import { pinyin } from 'pinyin-pro';
 import {
   IQuickLinksItem,
   useQuickLinksAccessDataItem,
@@ -24,25 +25,43 @@ export default function useQuickLinksDataLogic() {
   const [accessData, setAccessData, { clearAccessData }] =
     useQuickLinksAccessDataItem();
 
+  const pinyinData = useMemo(
+    () =>
+      data.map((item) => {
+        const pinyinStr = pinyin(item.name, {
+          toneType: 'none',
+          nonZh: 'consecutive',
+          separator: '-',
+        });
+        return {
+          ...item,
+          pinyin: pinyinStr === item.name ? '' : pinyinStr,
+        };
+      }),
+    [data],
+  );
+
   // 过滤关键字
-  let finalData = useMemo(() => {
+  const filteredData = useMemo(() => {
     if (subInput) {
-      return data.filter(({ name }) => {
+      return pinyinData.filter(({ name, pinyin }) => {
         // return name.includes(subInput);
-        const match = matchesFuzzy2(subInput, name);
-        if (match) {
+        if (matchesFuzzy2(subInput, name)) {
+          return true;
+        }
+        if (pinyin && matchesFuzzy2(subInput, pinyin)) {
           return true;
         }
         return false;
       });
     }
     return data;
-  }, [subInput, data]);
+  }, [subInput, pinyinData]);
 
   // 排序
-  finalData = useMemo(
+  const finalData = useMemo(
     () =>
-      finalData.slice().sort((a, b) => {
+      filteredData.slice().sort((a, b) => {
         const dateA = get(
           accessData,
           [a.id, 'lastAccessTime'],
@@ -56,7 +75,7 @@ export default function useQuickLinksDataLogic() {
 
         return dateB - dateA;
       }),
-    [finalData, accessData],
+    [filteredData, accessData],
   );
 
   const [selectedIndex, actions] = useSelectIndexWithKeyboard({

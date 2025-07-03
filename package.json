@@ -15,6 +15,7 @@
     "classnames": "2.5.1",
     "dayjs": "1.11.13",
     "lodash-es": "4.17.21",
+    "pinyin-pro": "3.26.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
