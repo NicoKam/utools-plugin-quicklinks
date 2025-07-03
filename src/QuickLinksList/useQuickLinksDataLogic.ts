@@ -7,7 +7,7 @@ import {
 } from '../storage';
 import { randomString } from '../utils/randomString';
 import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
-import useSecondaryConfirm from '../utils/useSencondaryConfirm';
+import useSecondaryConfirm from '../utils/useSecondaryConfirm';
 import useSubInput from '../utils/useSubInput';
 import { matchesFuzzy2 } from '../utils/vscode-utils/filters';
 import { CmdKey } from './const';
