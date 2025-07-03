@@ -1,21 +1,23 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useMemoizedFn, useUpdateEffect } from 'ahooks';
-import { useEventListener } from 'ahooks';
+import { useMemoizedFn, useUpdateEffect, useEventListener } from 'ahooks';
 
 /**
  * @description `useSelectIndex` 的选项
  */
 export interface UseSelectIndexOptions {
+
   /**
    * @description 默认选中的索引
    * @default 0
    */
   defaultSelectIndex?: number;
+
   /**
    * @description 最大长度
    * @default 0
    */
   maxLength?: number;
+
   /**
    * @description 是否循环
    * @default false
@@ -49,7 +51,7 @@ export default function useSelectIndex(options: UseSelectIndexOptions) {
   const constrainedSelectedIndex = getConstrainedIndex(selectedIndex);
 
   useUpdateEffect(() => {
-    if(resetOnMaxLengthChange) {
+    if (resetOnMaxLengthChange) {
       setSelectedIndex(getConstrainedIndex(defaultSelectIndex));
     }
   }, [maxLength]);
