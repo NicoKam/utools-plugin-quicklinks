@@ -3,27 +3,15 @@ import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Button, ButtonProps, Form, Input, message, Radio, Space } from 'antd';
-import { get } from 'lodash-es';
-import React, { useEffect, useMemo } from 'react';
-import DateTimeDisplay from '../components/DateTimeDisplay';
-import EnumDisplay from '../components/EnumDisplay';
+import React from 'react';
 import FormModal from '../components/FormModal';
-import { IQuickLinksItem, useQuickLinksAccessDataItem, useQuickLinksDataState, validateQuickLinks } from '../storage';
-import { randomString } from '../utils/randomString';
-import { useShortCutListener } from '../utils/shortcut';
-import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
-import useSecondaryConfirm from '../utils/useSencondaryConfirm';
-import useSubInput from '../utils/useSubInput';
-import { matchesFuzzy2 } from '../utils/vscode-utils/filters';
+import { IQuickLinksItem } from '../storage';
+import { CmdKey } from './const';
+import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import styles from './QuickLinksList.module.less';
+import useQuickLinksDataLogic from './useQuickLinksDataLogic';
+import useShortcutLogic from './useShortcutLogic';
 
-const CmdKey = window.utools.isMacOS() ? 'Cmd' : 'Ctrl';
-
-const quickOpenShort = new Array(9).fill(0)
-  .map((_, index) => [`Ctrl+${index + 1}`, `Cmd+${index + 1}`])
-  .flat();
-
-const EmptyHolder = () => <div className={styles.empty}>--</div>;
 
 const ButtonWithIcon = (props: ButtonProps) => {
   const { icon, className = '', ...restProps } = props;
@@ -47,83 +35,47 @@ export interface QuickLinksListProps extends
 const QuickLinksList = (props: QuickLinksListProps) => {
   const { className = '', ...otherProps } = props;
 
-  const subInput = useSubInput({ placeholder: `搜索(${CmdKey}+F)` });
-
-  const [data, setData] = useQuickLinksDataState();
-  const [accessData, setAccessData, { clearAccessData }] = useQuickLinksAccessDataItem();
-
-  // 过滤关键字
-  let finalData = useMemo(() => {
-    if (subInput) {
-      return data.filter(({ name }) => {
-        // return name.includes(subInput);
-        const match = matchesFuzzy2(subInput, name);
-        if (match) {
-          return true;
-        }
-        return false;
-      });
-    }
-    return data;
-  }, [subInput, data]);
-
-  // 排序
-  finalData = useMemo(() => finalData.slice().sort((a, b) => {
-    const dateA = get(accessData, [a.id, 'lastAccessTime'], get(accessData, [a.id, 'updateTime'], 0));
-    const dateB = get(accessData, [b.id, 'lastAccessTime'], get(accessData, [b.id, 'updateTime'], 0));
-
-    return dateB - dateA;
-  }), [finalData, accessData]);
+  const {
+    accessData,
+    isDeleteConfirm,
+    currentItem,
+    finalData,
+    selectedIndex,
+    importData,
+    setSelectIndex,
+    addItem,
+    editItem,
+    removeCurrentItem,
+    accessQuickLink,
+  } = useQuickLinksDataLogic();
 
 
-  const [selectedIndex, actions] = useSelectIndexWithKeyboard({ maxLength: finalData.length });
-
-  const currentItem = finalData.at(selectedIndex);
-
-  const currentItemAccessData = useMemo(() => currentItem ? get(accessData, currentItem.id) : undefined, [accessData, currentItem?.id]);
-
-  useUpdateEffect(() => {
-    if (selectedIndex >= 0) {
-      const dom = document.querySelector(`.${styles.item}_${selectedIndex}`);
-      if (dom) {
-        dom.scrollIntoView({
-          block: 'nearest',
-        });
-      }
-    }
-  }, [selectedIndex]);
+  const modal = usePromisifyModal();
 
   // 默认行为
   const mainAction = useMemoizedFn((currentIndex = selectedIndex) => {
     const currentItem = finalData.at(currentIndex);
-    const currentItemAccessData = get(accessData, currentItem?.id || '');
     if (currentItem) {
       if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
         window.utools.hideMainWindowPasteText(currentItem.value);
-      } else if (window.services) {
+      } else {
         // links 打开浏览器
         window.utools.shellOpenExternal(currentItem.value);
         window.utools.outPlugin();
         window.utools.hideMainWindow();
-      } else {
-        message.error(`window.services empty: ${JSON.stringify(window.services)}`);
       }
-      setAccessData(currentItem.id, {
-        lastAccessTime: Date.now(),
-        accessCount: (currentItemAccessData.accessCount || 0) + 1,
-      });
+      // 记录访问过了
+      accessQuickLink(currentItem.id);
     }
   });
 
-  const modal = usePromisifyModal();
-
-  const mainActionText = currentItem?.type === 'snippet' ? '粘贴内容' : '打开链接';
-
   const addOrEditItem = async (isEdit = false) => {
     const currentId = currentItem?.id;
-    const initialValue = isEdit ? currentItem : { type: 'link' };
+
     if (isEdit && !currentId) return;
+
+    const initialValue = isEdit ? currentItem : { type: 'link' };
 
     window.utools.subInputBlur();
     const okName = isEdit ? '编辑' : '添加';
@@ -156,32 +108,10 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
     if (result) {
       if (isEdit) {
-        setData(data => data.map((item) => {
-          if (item.id === currentId) {
-            return {
-              ...item,
-              ...result,
-            };
-          }
-          return item;
-        }));
-        setAccessData(currentId!, {
-          updateTime: Date.now(),
-        });
+        editItem(currentId!, result);
         message.success('已修改', 1);
       } else {
-        const id = `quick_${randomString(12)}`;
-        setData([
-          {
-            ...result,
-            id,
-          }, ...data,
-        ]);
-        setAccessData(id, {
-          accessCount: 0,
-          createTime: Date.now(),
-          updateTime: Date.now(),
-        });
+        addItem(result);
         message.success('添加成功', 1);
       }
     } else {
@@ -189,21 +119,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     }
   };
 
-  const { isConfirm, confirm, cancelConfirm } = useSecondaryConfirm();
-
-  useEffect(() => {
-    cancelConfirm();
-  }, [currentItem]);
-
-  const removeItem = () => {
-    if (currentItem) {
-      if (confirm()) {
-        setData(data.filter(item => item.id !== currentItem.id));
-        setAccessData(currentItem.id, undefined);
-        message.success('已删除', 2);
-      }
-    }
-  };
 
   const copyItem = () => {
     if (currentItem) {
@@ -240,88 +155,48 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       </FormModal>
     );
 
-    try {
-      if (result) {
+    if (result) {
+      try {
         const json = JSON.parse(result.value);
-        if (validateQuickLinks(json)) {
-          if (result.importType === 'replace') {
-            clearAccessData();
-            const newData = json.map(item => ({
-              ...item,
-              id: `quick_${randomString(12)}`,
-            }));
-            setData(newData);
-            newData.forEach((item) => {
-              setAccessData(item.id, {
-                accessCount: 0,
-                createTime: Date.now(),
-                updateTime: Date.now(),
-              });
-            });
-          } else {
-            const getKey = (item: IQuickLinksItem) => `${item.name}___${item.value}`;
-            const exists = new Set(data.map(item => getKey(item)));
-            const newData = json.filter(item => !exists.has(getKey(item))).map(item => ({
-              ...item,
-              id: `quick_${randomString(12)}`,
-            }));
-            setData([...newData, ...data]);
-            newData.forEach((item) => {
-              setAccessData(item.id, {
-                accessCount: 0,
-                createTime: Date.now(),
-                updateTime: Date.now(),
-              });
-            });
-          }
-          message.success('导入成功');
-        } else {
-          message.error('导入失败，数据格式错误');
-        }
+        importData(json, result.importType);
+        message.success('导入成功');
+      } catch (error) {
+        message.error('导入失败，数据格式错误');
       }
-    } catch (error: any) {
-      message.error(`导入失败，数据格式错误: ${error?.message}`);
+    } else {
+      message.warning('未导入内容');
     }
   };
 
-  // 快速打开的快捷键
-  useShortCutListener(quickOpenShort, (e) => {
-    const index = Number(e.key);
-    if (index > 0 && index < 10) {
-      mainAction(index - 1);
+
+  // 当选中的元素变化时，自动滚动当视窗内
+  useUpdateEffect(() => {
+    if (selectedIndex >= 0) {
+      const dom = document.querySelector(`.${styles.item}_${selectedIndex}`);
+      if (dom) {
+        dom.scrollIntoView({
+          block: 'nearest',
+        });
+      }
     }
-  });
+  }, [selectedIndex]);
 
-  useShortCutListener('Enter', (e) => {
-    if (e.target === document.body) mainAction();
-  });
 
-  useShortCutListener(`${CmdKey}+C`, (e) => {
-    if (e.target === document.body) copyItem();
-  });
+  const mainActionText = currentItem?.type === 'snippet' ? '粘贴内容' : '打开链接';
 
-  useShortCutListener(`${CmdKey}+N`, (e) => {
-    if (e.target === document.body) addOrEditItem();
-  });
 
-  useShortCutListener(`${CmdKey}+E`, (e) => {
-    if (e.target === document.body) addOrEditItem(true);
-  });
-
-  useShortCutListener(`${CmdKey}+R`, (e) => {
-    if (e.target === document.body) removeItem();
-  });
-
-  useShortCutListener(`${CmdKey}+F`, (e) => {
-    if (e.target === document.body) {
+  // 快捷键相关逻辑
+  useShortcutLogic({
+    onMainAction: mainAction,
+    onCopy: copyItem,
+    onAdd: addOrEditItem,
+    onEdit: () => addOrEditItem(true),
+    onRemove: removeCurrentItem,
+    onFind: () => {
       window.utools.subInputFocus();
-    }
+    },
   });
 
-  useShortCutListener('Escape', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
 
   return (
     <div className={`${styles.root} ${className}`} {...otherProps}>
@@ -337,7 +212,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
               <div
                 className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
                 key={index}
-                onClick={() => { actions.set(index); }}
+                onClick={() => { setSelectIndex(index); }}
                 onDoubleClick={() => { mainAction(index); }}
               >
                 <div className={styles.itemContent}>
@@ -359,47 +234,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
               {currentItem.value}
             </div>
 
-            <div className={styles.info}>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>脚本名称</div>
-                <div className={styles.rowValue}>{currentItem.name}</div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>类型</div>
-                <div className={styles.rowValue}>
-                  <EnumDisplay
-                    value={currentItem.type}
-                    enums={[
-                      { value: 'link', text: '链接' },
-                      { value: 'snippet', text: '文本片段' },
-                    ]}
-                    emptyHolder={<EmptyHolder />}
-                  />
-                </div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>最近使用时间</div>
-                <div className={styles.rowValue}>
-                  <DateTimeDisplay value={currentItemAccessData?.lastAccessTime} emptyHolder={<EmptyHolder />} />
-                </div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>使用次数</div>
-                <div className={styles.rowValue}>{currentItemAccessData?.accessCount}</div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>更新时间</div>
-                <div className={styles.rowValue}>
-                  <DateTimeDisplay value={currentItemAccessData?.updateTime} emptyHolder={<EmptyHolder />} />
-                </div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.rowTitle}>创建时间</div>
-                <div className={styles.rowValue}>
-                  <DateTimeDisplay value={currentItemAccessData?.createTime} emptyHolder={<EmptyHolder />} />
-                </div>
-              </div>
-            </div>
+            <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} />
           </div>
         )}
       </div>
@@ -416,7 +251,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         </Space>
         <div style={{ flex: 1 }} />
         <Space size={2} split={<span className={styles.split} />}>
-          {currentItem && <ButtonWithIcon color={isConfirm ? 'red' : 'default'} icon={`${CmdKey}+R`} onClick={removeItem}>{isConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
+          {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} icon={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
           {currentItem && <ButtonWithIcon icon={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
           {currentItem && <ButtonWithIcon icon={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
           {currentItem && <ButtonWithIcon icon={<EnterOutlined />} onClick={mainAction}>{mainActionText}</ButtonWithIcon>}

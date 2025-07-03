@@ -104,13 +104,18 @@ export function useQuickLinksAccessDataItem() {
   const getAccessData = useMemoizedFn((id: string) => accessData[id]);
 
   const setAccessData = useMemoizedFn(
-    (id: string, data?: IQuickLinksAccessData) => {
+    (
+      id: string,
+      data?:
+        | IQuickLinksAccessData
+        | ((prev: IQuickLinksAccessData) => IQuickLinksAccessData),
+    ) => {
       if (data) {
         _setAccessData(prev => ({
           ...prev,
           [id]: {
             ...prev[id],
-            ...data,
+            ...(typeof data === 'function' ? data(prev[id]) : data),
           },
         }));
       } else {

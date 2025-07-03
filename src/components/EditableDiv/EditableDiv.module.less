@@ -1,0 +1,52 @@
+.root {
+  min-width: 0.6em;
+  padding: 0 2px;
+
+  pre {
+    overflow: hidden;
+    white-space: break-spaces;
+    word-wrap: normal;
+    margin-bottom: 0;
+    margin-top: 0;
+
+    &:focus {
+      outline: none;
+      border: none;
+    }
+  }
+}
+
+.editing {
+  border: 2px solid #1199ff;
+  border-radius: 4px;
+  text-overflow: initial !important;
+  cursor: initial;
+  &:not(.transparent) {
+    background-color: #ffffff;
+    color: #333333;
+
+    // 深色模式下的样式
+    @media (prefers-color-scheme: dark) {
+      background-color: rgba(100, 100, 100, 0.1);
+      color: inherit;
+    }
+  }
+}
+
+.transparent {
+}
+
+.breakWord {
+  > pre {
+    word-wrap: break-word;
+  }
+}
+
+.compact {
+  border-radius: 2px;
+  line-height: 1.2em;
+}
+
+.placeholder {
+  color: #999;
+}
