@@ -146,10 +146,16 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
       })} ${className}`}
       {...otherProps}
     >
-      {!value && (
-        <span className={styles.placeholder}>{placeholder}</span>
-      )}
-      <pre ref={preRef} contentEditable={editing ? 'plaintext-only' : 'false'} />
+      <span ref={preRef} className={styles.value} contentEditable={editing ? 'plaintext-only' : 'false'} />
+      <span
+        className={styles.placeholder}
+        onClick={() => {
+          preRef.current?.focus();
+          console.log('wkn-preRef.current', preRef.current);
+        }}
+      >
+        {placeholder}
+      </span>
     </div>
   );
 });

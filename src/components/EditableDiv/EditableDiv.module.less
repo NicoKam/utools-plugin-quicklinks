@@ -2,22 +2,28 @@
   min-width: 0.6em;
   padding: 0 2px;
 
-  pre {
+  .value {
     overflow: hidden;
     white-space: break-spaces;
     word-wrap: normal;
     margin-bottom: 0;
     margin-top: 0;
-
     &:focus {
       outline: none;
       border: none;
+    }
+
+    &:not(:empty) + .placeholder {
+      display: none;
     }
   }
 }
 
 .editing {
-  border: 2px solid #1199ff;
+  border: 2px solid rgba(180,180,180,0.5);
+  &:focus-within {
+    border-color: #1199ff;
+  }
   border-radius: 4px;
   text-overflow: initial !important;
   cursor: initial;
