@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 import { useShortCutListener } from '../../utils/shortcut';
 import styles from './ButtonWithIcon.module.less';
 
-export interface ButtonWithIconProps extends Omit<ButtonProps, 'icon'> {
+export interface ButtonWithIconProps extends Omit<ButtonProps, 'icon' | 'onClick'> {
 
   /** 图标或快捷键文本 */
   icon?: ReactNode;
@@ -11,6 +11,7 @@ export interface ButtonWithIconProps extends Omit<ButtonProps, 'icon'> {
   /** 快捷键字符串或数组，用于触发按钮点击 */
   shortcuts?: string | string[];
 
+  onClick?: (e: Event) => void;
 }
 
 const ButtonWithIcon = (props: ButtonWithIconProps) => {
@@ -25,15 +26,15 @@ const ButtonWithIcon = (props: ButtonWithIconProps) => {
   // 快捷键监听
   useShortCutListener(
     shortcuts,
-    () => {
+    (e) => {
       // 直接调用 onClick，不传递事件参数
-      onClick?.({} as React.MouseEvent<HTMLElement>);
+      onClick?.(e);
     },
     { enable: typeof shortcuts === 'string' ? shortcuts.length > 0 : Array.isArray(shortcuts) && shortcuts.length > 0 }
   );
 
   // 如果没有传入 icon，但有 shortcuts，则显示第一个快捷键
-  const displayIcon = icon || (shortcuts.length > 0 ? shortcuts[0] : null);
+  const displayIcon = icon || (Array.isArray(shortcuts) ? shortcuts[0] : shortcuts);
 
   return (
     <Button
@@ -42,7 +43,7 @@ const ButtonWithIcon = (props: ButtonWithIconProps) => {
       variant="text"
       iconPosition="end"
       icon={displayIcon ? <div className={styles.icon}>{displayIcon}</div> : null}
-      onClick={onClick}
+      onClick={(e) => { onClick?.(e.nativeEvent); }}
       {...restProps}
     />
   );

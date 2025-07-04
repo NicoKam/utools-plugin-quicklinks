@@ -1,19 +1,39 @@
 import { get } from 'lodash-es';
-import { useEffect, useMemo } from 'react';
 import { pinyin } from 'pinyin-pro';
+import { useEffect, useMemo } from 'react';
 import {
   IQuickLinksItem,
   useQuickLinksAccessDataItem,
   useQuickLinksDataState,
 } from '../storage';
 import { randomString } from '../utils/randomString';
-import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
 import useSecondaryConfirm from '../utils/useSecondaryConfirm';
+import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
 import useSubInput from '../utils/useSubInput';
 import { matchesFuzzy2 } from '../utils/vscode-utils/filters';
 import { CmdKey } from './const';
 
 const newId = () => `quick_${randomString(12)}`;
+
+// 辅助函数：判断时间所属范围
+const getTimeRange = (timestamp: number) => {
+  if (!timestamp) return '更早';
+
+  const date = new Date(timestamp);
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+  const thisWeekStart = new Date(
+    todayStart.getTime() - (now.getDay() || 7 - 1) * 24 * 60 * 60 * 1000,
+  );
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  if (date >= todayStart) return '今天';
+  if (date >= yesterdayStart) return '昨天';
+  if (date >= thisWeekStart) return '本周';
+  if (date >= thisMonthStart) return '本月';
+  return '更早';
+};
 
 /**
  * 快捷链接数据逻辑
@@ -59,24 +79,41 @@ export default function useQuickLinksDataLogic() {
   }, [subInput, pinyinData]);
 
   // 排序
-  const finalData = useMemo(
-    () =>
-      filteredData.slice().sort((a, b) => {
-        const dateA = get(
-          accessData,
-          [a.id, 'lastAccessTime'],
-          get(accessData, [a.id, 'updateTime'], 0),
-        );
-        const dateB = get(
-          accessData,
-          [b.id, 'lastAccessTime'],
-          get(accessData, [b.id, 'updateTime'], 0),
-        );
+  const finalData = useMemo(() => {
+    const sortedData = filteredData.slice().sort((a, b) => {
+      const dateA = get(
+        accessData,
+        [a.id, 'lastAccessTime'],
+        get(accessData, [a.id, 'updateTime'], 0),
+      );
+      const dateB = get(
+        accessData,
+        [b.id, 'lastAccessTime'],
+        get(accessData, [b.id, 'updateTime'], 0),
+      );
 
-        return dateB - dateA;
-      }),
-    [filteredData, accessData],
-  );
+      return dateB - dateA;
+    });
+
+    let prevRange: string | null = null;
+    return sortedData.map((item, index) => {
+      const date = get(
+        accessData,
+        [item.id, 'lastAccessTime'],
+        get(accessData, [item.id, 'updateTime'], 0),
+      );
+      const currentRange = getTimeRange(date);
+
+      if (index === 0 || currentRange !== prevRange) {
+        prevRange = currentRange;
+        return { ...item, timeRange: currentRange };
+      }
+      return {
+        ...item,
+        timeRange: '',
+      };
+    });
+  }, [filteredData, accessData]);
 
   const [selectedIndex, actions] = useSelectIndexWithKeyboard({
     maxLength: finalData.length,

@@ -3,13 +3,15 @@ import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Form, Input, message, Radio, Space } from 'antd';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
 import { IQuickLinksItem } from '../storage';
+import { useShortCutListener } from '../utils/shortcut';
 import { CmdKey } from './const';
 import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import styles from './QuickLinksList.module.less';
+import { hasParams, QuickLinksParamEditModal, replaceParams } from './QuickLinksParamEdit';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
 
@@ -35,24 +37,52 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     accessQuickLink,
   } = useQuickLinksDataLogic();
 
+  const [_this] = useState({
+    params: {} as Record<string, string>,
+  });
+
+  const detailRef = useRef<HTMLDivElement>(null);
+
+  const [modalOpen, setModalOpen] = useState('');
 
   const modal = usePromisifyModal();
+
+  // 记录访问过了
+  const markAccessAndExit = (id: string) => {
+    accessQuickLink(id);
+    window.utools.outPlugin();
+    window.utools.hideMainWindow();
+  };
 
   // 默认行为
   const mainAction = useMemoizedFn((currentIndex = selectedIndex) => {
     const currentItem = finalData.at(currentIndex);
+    if (currentIndex !== selectedIndex) {
+      setSelectIndex(currentIndex);
+    }
     if (currentItem) {
       if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
         window.utools.hideMainWindowPasteText(currentItem.value);
+        markAccessAndExit(currentItem.id);
       } else {
-        // links 打开浏览器
-        window.utools.shellOpenExternal(currentItem.value);
-        window.utools.outPlugin();
-        window.utools.hideMainWindow();
+        const linkHasParams = hasParams(currentItem.value);
+        if ((!modalOpen) && linkHasParams) {
+          // links 但存在参数
+          window.utools.subInputBlur();
+          _this.params = {};
+          setModalOpen(currentItem.value);
+        } else if (modalOpen) {
+          const links = replaceParams(modalOpen, _this.params);
+          setModalOpen('');
+          window.utools.shellOpenExternal(links);
+          markAccessAndExit(currentItem.id); // 注意，这里在上面设置了 selectIndex，所以才没问题，否则可能会出问题
+        } else {
+          // links 打开浏览器
+          window.utools.shellOpenExternal(currentItem.value);
+          markAccessAndExit(currentItem.id);
+        }
       }
-      // 记录访问过了
-      accessQuickLink(currentItem.id);
     }
   });
 
@@ -107,9 +137,14 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
 
   const copyItem = () => {
+    // 如果当前聚焦的元素在 detail 内，且有选中内容，则不进行额外的复制操作
+    if (
+      detailRef.current?.contains(document.activeElement as Node) &&
+      window.getSelection()?.toString()
+        .trim()) return;
     if (currentItem) {
       window.utools.copyText(currentItem.value);
-      message.success('已复制', 1);
+      message.success(`已复制【${currentItem.name}】的值`, 1);
     }
   };
 
@@ -177,6 +212,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     onFind: () => {
       window.utools.subInputFocus();
     },
+    enable: !modalOpen,
   });
 
 
@@ -191,27 +227,35 @@ const QuickLinksList = (props: QuickLinksListProps) => {
           )}
           {
             finalData.map((item, index) => (
-              <div
-                className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
-                key={index}
-                onClick={() => { setSelectIndex(index); }}
-                onDoubleClick={() => { mainAction(index); }}
-              >
-                <div className={styles.itemContent}>
-                  <div className={styles.name}>{item.name}</div>
-                  <div className={styles.tips} title={item.value}>{item.value}</div>
+              <React.Fragment key={index}>
+                {item.timeRange && (
+                  <div className={styles.timeRange}>
+                    {item.timeRange}
+                  </div>
+                )}
+                <div
+                  className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
+                  key={index}
+                  onClick={() => { setSelectIndex(index); }}
+                  onDoubleClick={() => { mainAction(index); }}
+                >
+                  <div className={styles.itemContent}>
+                    <div className={styles.name}>{item.name}</div>
+                    <div className={styles.tips} title={item.value}>{item.value}</div>
+                  </div>
+                  {/* icon */}
+                  <div className={styles.itemTips}>
+                    {index < 9 ? `#${index + 1}` : null}
+                  </div>
                 </div>
-                {/* icon */}
-                <div className={styles.itemTips}>
-                  {index < 9 ? `#${index + 1}` : null}
-                </div>
-              </div>
+              </React.Fragment>
+
             ))
           }
         </div>
 
         {currentItem && (
-          <div className={styles.detail}>
+          <div className={styles.detail} ref={detailRef} tabIndex={-1}>
             <div className={styles.preview}>
               {currentItem.value}
             </div>
@@ -219,6 +263,16 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} />
           </div>
         )}
+
+        {/* Modal 部分 */}
+        <QuickLinksParamEditModal
+          open={Boolean(modalOpen)}
+          onCancel={() => { setModalOpen(''); }}
+          template={modalOpen}
+          onChange={(params) => {
+            _this.params = params;
+          }}
+        />
       </div>
 
       <div
@@ -230,15 +284,27 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         }}
       >
         <Space size={2} split={<span className={styles.split} />}>
-          <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
-          <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
+          {
+            !modalOpen && (
+              <>
+                <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
+                <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
+              </>
+            )
+          }
         </Space>
         <div style={{ flex: 1 }} />
         <Space size={2} split={<span className={styles.split} />}>
-          {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts={`Enter`} onClick={mainAction}>{mainActionText}</ButtonWithIcon>}
+          {
+            !modalOpen && (
+              <>
+                {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
+                {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
+                {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
+              </>
+            )
+          }
+          {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={() => { mainAction(); }}>{mainActionText}</ButtonWithIcon>}
         </Space>
       </div>
       {modal.instance}
