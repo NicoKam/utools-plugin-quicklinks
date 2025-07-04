@@ -33,7 +33,7 @@
 
     .item {
       overflow: hidden;
-      padding: 8px 12px;
+      padding: 2px 12px;
       border-top: 1px solid var(--border-color);
 
       .itemContent {
@@ -49,7 +49,8 @@
       }
 
       .name {
-        font-size: 16px;
+        font-size: 14px;
+        line-height: 1.5;
       }
 
       .tips {
@@ -124,4 +125,9 @@
   padding: 2px 12px;
   margin-top: 4px;
   color: #999;
+  font-size: 12px;
+
+  &:not(:first-child) {
+    margin-top: 8px;
+  }
 }
