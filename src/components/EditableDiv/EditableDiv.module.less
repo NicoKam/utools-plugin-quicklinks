@@ -5,9 +5,9 @@
   .value {
     overflow: hidden;
     white-space: break-spaces;
-    word-wrap: normal;
-    margin-bottom: 0;
-    margin-top: 0;
+    // word-wrap: normal;
+    word-break: break-all;
+
     &:focus {
       outline: none;
       border: none;
@@ -20,7 +20,7 @@
 }
 
 .editing {
-  border: 2px solid rgba(180,180,180,0.5);
+  border: 2px solid rgba(180, 180, 180, 0.5);
   &:focus-within {
     border-color: #1199ff;
   }
@@ -28,7 +28,7 @@
   text-overflow: initial !important;
   cursor: initial;
   &:not(.transparent) {
-    background-color: #ffffff;
+    // background-color: #ffffff;
     color: #333333;
 
     // 深色模式下的样式

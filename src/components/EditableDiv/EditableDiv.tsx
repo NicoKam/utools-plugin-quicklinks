@@ -31,6 +31,7 @@ export interface EditableDivProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   stopPropagationWhenEditing?: boolean;
   breakWord?: boolean;
   placeholder?: string;
+  triggerOnInput?: boolean;
 }
 
 const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, pRef) => {
@@ -44,9 +45,11 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
     compact,
     trigger = 'dblclick',
     transparent,
-    stopPropagationWhenEditing,
+    stopPropagationWhenEditing = true,
     breakWord,
     placeholder = '',
+    autoFocus = true,
+    triggerOnInput = false,
     ...otherProps
   } = props;
   const [value, setValue] = useControllableValue(props);
@@ -69,7 +72,7 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
 
   const confirm = () => {
     if (preRef.current) {
-      const editingValue = preRef.current.innerText;
+      const editingValue = preRef.current.innerText.replace(/\n/g, '');
       setValue(editingValue);
       setEditing(false);
     }
@@ -93,19 +96,35 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
     { target: rootRef },
   );
 
+  const handleValueChange = () => {
+    if (preRef.current) {
+      const value = preRef.current.innerText.replace(/\n/g, '');
+      if (value !== preRef.current.innerText) {
+        preRef.current.innerText = value;
+      }
+      if (_this.lastValue !== value && triggerOnInput) {
+        setValue(value);
+      }
+      _this.lastValue = value;
+    }
+  };
+
+  useEventListener('input', () => {
+    handleValueChange();
+  }, { target: preRef });
+
   useEventListener(
     'keydown',
     (e: KeyboardEvent) => {
-      if (editing) {
+      if (editing && stopPropagationWhenEditing) {
         e.stopPropagation();
       }
-      const { key, ctrlKey, altKey, shiftKey } = e;
+      const { key, ctrlKey, altKey } = e;
 
       if (key === 'Escape') {
         // 取消本次编辑
         setEditing(false);
-      }
-      if (key === 'Enter' && !ctrlKey && !altKey && !shiftKey) {
+      } else if (key === 'Enter' && !ctrlKey && !altKey) {
         // 确认本次编辑
         e.preventDefault();
         confirm();
@@ -116,7 +135,7 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
 
   useEffect(() => {
     if (preRef.current) {
-      if (editing) {
+      if (editing && autoFocus) {
         preRef.current.focus();
         selectDom(preRef.current);
       }
@@ -151,7 +170,6 @@ const EditableDiv = React.forwardRef<HTMLDivElement, EditableDivProps>((props, p
         className={styles.placeholder}
         onClick={() => {
           preRef.current?.focus();
-          console.log('wkn-preRef.current', preRef.current);
         }}
       >
         {placeholder}

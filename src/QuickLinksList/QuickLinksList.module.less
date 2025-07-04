@@ -10,6 +10,7 @@
   }
 
   .center {
+    position: relative;
     display: flex;
     flex: 1;
     overflow: hidden;
@@ -33,7 +34,7 @@
     .item {
       overflow: hidden;
       padding: 8px 12px;
-      border-bottom: 1px solid var(--border-color);
+      border-top: 1px solid var(--border-color);
 
       .itemContent {
         flex: 1;
@@ -60,11 +61,11 @@
       }
 
       &:hover {
-        background-color: rgba(200, 200, 200, 0.15);
+        background-color: rgba(200, 200, 200, 0.2);
       }
 
       &.selected {
-        background-color: rgba(200, 200, 200, 0.2);
+        background-color: rgba(200, 200, 200, 0.3);
       }
     }
   }
@@ -117,4 +118,10 @@
   color: #999;
   height: 1.5em;
   border-left: 1px solid var(--border-color);
+}
+
+.timeRange {
+  padding: 2px 12px;
+  margin-top: 4px;
+  color: #999;
 }
