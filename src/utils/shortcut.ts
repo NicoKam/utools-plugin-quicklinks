@@ -136,7 +136,7 @@ export function useShortCutListener<T extends Target = Target>(
   callback: (e: KeyboardEvent, event: string) => void,
   options?: Options<T>,
 ) {
-  const eventNames = Array.isArray(eventName) ? eventName : [eventName];
+  const eventNames = Array.isArray(eventName) ? eventName : [eventName].filter(Boolean);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     const keyStr = normalizeHotkey(e)?.join('+');

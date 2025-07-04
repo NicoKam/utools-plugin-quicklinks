@@ -2,8 +2,9 @@
 import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
-import { Button, ButtonProps, Form, Input, message, Radio, Space } from 'antd';
+import { Form, Input, message, Radio, Space } from 'antd';
 import React from 'react';
+import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
 import { IQuickLinksItem } from '../storage';
 import { CmdKey } from './const';
@@ -11,21 +12,6 @@ import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import styles from './QuickLinksList.module.less';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
-
-
-const ButtonWithIcon = (props: ButtonProps) => {
-  const { icon, className = '', ...restProps } = props;
-  return (
-    <Button
-      className={`${styles.iconWithButton} ${className}`}
-      color="default"
-      variant="text"
-      iconPosition="end"
-      icon={icon ? <div className={styles.iconWithButtonIcon}>{icon}</div> : null}
-      {...restProps}
-    />
-  );
-};
 
 export interface QuickLinksListProps extends
   Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
@@ -136,7 +122,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         cancelText="关闭"
         initialValues={{
           importType: 'replace',
-          value: JSON.stringify(data.map(item => ({
+          value: JSON.stringify(finalData.map(item => ({
             name: item.name,
             type: item.type,
             value: item.value,
@@ -188,10 +174,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   // 快捷键相关逻辑
   useShortcutLogic({
     onMainAction: mainAction,
-    onCopy: copyItem,
-    onAdd: addOrEditItem,
-    onEdit: () => addOrEditItem(true),
-    onRemove: removeCurrentItem,
     onFind: () => {
       window.utools.subInputFocus();
     },
@@ -242,19 +224,21 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       <div
         className={styles.footer}
         onFocus={() => {
-          document.activeElement?.blur();
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
         }}
       >
         <Space size={2} split={<span className={styles.split} />}>
-          <ButtonWithIcon icon={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
+          <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
           <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
         </Space>
         <div style={{ flex: 1 }} />
         <Space size={2} split={<span className={styles.split} />}>
-          {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} icon={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon icon={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon icon={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
-          {currentItem && <ButtonWithIcon icon={<EnterOutlined />} onClick={mainAction}>{mainActionText}</ButtonWithIcon>}
+          {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
+          {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
+          {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
+          {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts={`Enter`} onClick={mainAction}>{mainActionText}</ButtonWithIcon>}
         </Space>
       </div>
       {modal.instance}
