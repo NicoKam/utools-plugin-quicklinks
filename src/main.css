@@ -9,7 +9,7 @@ body {
   padding: 0;
 }
 
-button {
+/* button {
   border: none;
   background: none var(--blue);
   color: var(--light);
@@ -30,7 +30,7 @@ button:not(:disabled):active {
 textarea {
   display: block;
   margin: 0;
-}
+} */
 
 @media (prefers-color-scheme: light) {
   body {
@@ -62,6 +62,4 @@ textarea {
     background-color: #666;
     border-color: var(--background-color, #303133);
   }
-
-
 }

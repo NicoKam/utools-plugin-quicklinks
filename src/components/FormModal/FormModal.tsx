@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Form, FormProps, Modal, ModalProps } from 'antd';
 import { Store } from 'antd/es/form/interface';
-import React from 'react';
+import { CmdKey } from '../../QuickLinksList/const';
+import { normalizeHotkey } from '../../utils/shortcut';
 
 export interface FormModalProps<T> extends Omit<ModalProps, 'onOk'> {
   formProps?: FormProps;
@@ -23,7 +24,15 @@ const FormModal = <T extends Store = any>(props: FormModalProps<T>) => {
 
   return (
     <Modal {...otherProps} onOk={handleOk}>
-      <Form form={form} initialValues={initialValues} labelCol={{ span: 3 }} {...formProps}>
+      <Form form={form} initialValues={initialValues} labelCol={{ span: 3 }} {...formProps} onKeyDown={(e) => {
+        switch (normalizeHotkey(e.nativeEvent)?.join('+')) {
+          case CmdKey + '+Enter':
+            handleOk();
+            break;
+          default:
+            break;
+        }
+      }}>
         {children}
       </Form>
     </Modal>

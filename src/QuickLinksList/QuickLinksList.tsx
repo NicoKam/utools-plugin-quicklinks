@@ -14,6 +14,7 @@ import styles from './QuickLinksList.module.less';
 import { hasParams, QuickLinksParamEditModal, replaceParams } from './QuickLinksParamEdit';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
+import FooterLayout from './FooterLayout';
 
 export interface QuickLinksListProps extends
   Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
@@ -43,9 +44,10 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
   const detailRef = useRef<HTMLDivElement>(null);
 
-  const [modalOpen, setModalOpen] = useState('');
 
   const modal = usePromisifyModal();
+
+  const modalOpen = modal.isOpen;
 
   // 记录访问过了
   const markAccessAndExit = (id: string) => {
@@ -55,11 +57,14 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   };
 
   // 默认行为
-  const mainAction = useMemoizedFn((currentIndex = selectedIndex) => {
+  const mainAction = useMemoizedFn(async (currentIndex = selectedIndex) => {
     const currentItem = finalData.at(currentIndex);
     if (currentIndex !== selectedIndex) {
       setSelectIndex(currentIndex);
     }
+
+    if (modal.isOpen) return;
+
     if (currentItem) {
       if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
@@ -67,16 +72,19 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         markAccessAndExit(currentItem.id);
       } else {
         const linkHasParams = hasParams(currentItem.value);
-        if ((!modalOpen) && linkHasParams) {
-          // links 但存在参数
+
+        if (linkHasParams) {
           window.utools.subInputBlur();
-          _this.params = {};
-          setModalOpen(currentItem.value);
-        } else if (modalOpen) {
-          const links = replaceParams(modalOpen, _this.params);
-          setModalOpen('');
-          window.utools.shellOpenExternal(links);
-          markAccessAndExit(currentItem.id); // 注意，这里在上面设置了 selectIndex，所以才没问题，否则可能会出问题
+          const link = await modal.open<string>(
+            <QuickLinksParamEditModal
+              open={Boolean(modalOpen)}
+              template={currentItem.value}
+            />
+          );
+          if (link) {
+            window.utools.shellOpenExternal(link);
+            markAccessAndExit(currentItem.id); // 注意，这里在上面设置了 selectIndex，所以才没问题，否则可能会出问题
+          }
         } else {
           // links 打开浏览器
           window.utools.shellOpenExternal(currentItem.value);
@@ -217,7 +225,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
 
   return (
-    <div className={`${styles.root} ${className}`} {...otherProps}>
+    <FooterLayout className={`${styles.root} ${className}`} footerClassName={styles.footer} {...otherProps}>
       <div className={styles.center}>
         <div className={styles.list}>
           {finalData.length === 0 && (
@@ -264,51 +272,32 @@ const QuickLinksList = (props: QuickLinksListProps) => {
           </div>
         )}
 
-        {/* Modal 部分 */}
-        <QuickLinksParamEditModal
-          open={Boolean(modalOpen)}
-          onCancel={() => { setModalOpen(''); }}
-          template={modalOpen}
-          onChange={(params) => {
-            _this.params = params;
-          }}
-        />
+
       </div>
 
-      <div
-        className={styles.footer}
-        onFocus={() => {
-          if (document.activeElement instanceof HTMLElement) {
-            document.activeElement.blur();
-          }
-        }}
-      >
-        <Space size={2} split={<span className={styles.split} />}>
-          {
-            !modalOpen && (
-              <>
-                <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
-                <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
-              </>
-            )
-          }
-        </Space>
-        <div style={{ flex: 1 }} />
-        <Space size={2} split={<span className={styles.split} />}>
-          {
-            !modalOpen && (
-              <>
-                {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
-                {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
-                {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
-              </>
-            )
-          }
-          {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={() => { mainAction(); }}>{mainActionText}</ButtonWithIcon>}
-        </Space>
-      </div>
+
+      <FooterLayout.Footer position="left">
+        {!modalOpen && (
+          <>
+            <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
+            <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
+          </>
+        )}
+      </FooterLayout.Footer>
+      <FooterLayout.Footer position="right">
+        {
+          !modalOpen && (
+            <>
+              {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
+              {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
+              {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
+              {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={() => { mainAction(); }}>{mainActionText}</ButtonWithIcon>}
+            </>
+          )
+        }
+      </FooterLayout.Footer>
       {modal.instance}
-    </div>
+    </FooterLayout>
   );
 };
 
