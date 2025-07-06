@@ -1,5 +1,6 @@
 :root {
   --blue: rgb(88, 164, 246);
+  --border-color: rgba(180, 180, 180, 0.3);
   --light: #fff;
 }
 
@@ -52,6 +53,7 @@ textarea {
     --background-color: #303133;
     background-color: var(--background-color, #303133);
     color: #fff;
+    --color: #fff;
   }
 
   &::-webkit-scrollbar-track-piece {

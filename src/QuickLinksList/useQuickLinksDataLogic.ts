@@ -3,8 +3,12 @@ import { pinyin } from 'pinyin-pro';
 import { useEffect, useMemo } from 'react';
 import {
   IQuickLinksItem,
+  IQuickLinksGroup,
   useQuickLinksAccessDataItem,
   useQuickLinksDataState,
+  useQuickLinksGroupsState,
+  useSelectedGroupState,
+  useRemoteGroupCacheState,
 } from '../storage';
 import { randomString } from '../utils/randomString';
 import useSecondaryConfirm from '../utils/useSecondaryConfirm';
@@ -14,6 +18,24 @@ import { matchesFuzzy2 } from '../utils/vscode-utils/filters';
 import { CmdKey } from './const';
 
 const newId = () => `quick_${randomString(12)}`;
+
+const genRemoteId = (groupId: string, item: IQuickLinksItem) => {
+  return `remote_${groupId}____${item.name}____${item.value}`;
+}
+
+function addPinyin(data: IQuickLinksItem[]) {
+  return data.map((item) => {
+    const pinyinStr = pinyin(item.name, {
+      toneType: 'none',
+      nonZh: 'consecutive',
+      separator: '-',
+    });
+    return {
+      ...item,
+      pinyin: pinyinStr === item.name ? '' : pinyinStr,
+    };
+  })
+}
 
 // 辅助函数：判断时间所属范围
 const getTimeRange = (timestamp: number) => {
@@ -44,27 +66,40 @@ export default function useQuickLinksDataLogic() {
   const [data, setData] = useQuickLinksDataState();
   const [accessData, setAccessData, { clearAccessData }] =
     useQuickLinksAccessDataItem();
+  // 分组数据
+  const [groups, setGroups] = useQuickLinksGroupsState();
+  // 当前选中的分组
+  const [selectedGroupId, setSelectedGroupId] = useSelectedGroupState();
+  // 分组数据缓存
+  const [remoteCache, setRemoteCache] = useRemoteGroupCacheState();
 
   const pinyinData = useMemo(
     () =>
-      data.map((item) => {
-        const pinyinStr = pinyin(item.name, {
-          toneType: 'none',
-          nonZh: 'consecutive',
-          separator: '-',
-        });
-        return {
-          ...item,
-          pinyin: pinyinStr === item.name ? '' : pinyinStr,
-        };
-      }),
+      addPinyin(data),
     [data],
   );
+
+  const remoteData = useMemo(() => Object.values(remoteCache).map(item => item.data).flat(), [remoteCache]);
+
+  // TODO 加载远程数据
+
+  // 合并本地数据和远程数据
+  const allData = useMemo(() => {
+    return [...pinyinData, ...remoteData];
+  }, [pinyinData, remoteData]);
+
+  // 按分组过滤数据
+  const groupFilteredData = useMemo(() => {
+    if (!selectedGroupId || selectedGroupId === 'all') {
+      return allData;
+    }
+    return allData.filter(item => item.groupId === selectedGroupId);
+  }, [allData, selectedGroupId]);
 
   // 过滤关键字
   const filteredData = useMemo(() => {
     if (subInput) {
-      return pinyinData.filter(({ name, pinyin }) => {
+      return groupFilteredData.filter(({ name, pinyin }) => {
         // return name.includes(subInput);
         if (matchesFuzzy2(subInput, name)) {
           return true;
@@ -75,8 +110,8 @@ export default function useQuickLinksDataLogic() {
         return false;
       });
     }
-    return data;
-  }, [subInput, pinyinData]);
+    return groupFilteredData;
+  }, [subInput, groupFilteredData]);
 
   // 排序
   const finalData = useMemo(() => {
@@ -246,6 +281,65 @@ export default function useQuickLinksDataLogic() {
     }));
   };
 
+  // 分组相关操作
+  const clearGroupData = (groupId: string) => {
+    setData(data => data.map(item => 
+      item.groupId === groupId ? { ...item, groupId: undefined } : item
+    ));
+  };
+
+  const fetchRemoteGroupData = async (group: IQuickLinksGroup) => {
+    if (group.type !== 'remote' || !group.remoteUrl) return;
+
+    try {
+      const response = await fetch(group.remoteUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const remoteData = await response.json();
+      
+      // 验证远程数据格式
+      if (Array.isArray(remoteData) && remoteData.every(item => 
+        typeof item.name === 'string' && typeof item.value === 'string'
+      )) {
+        // 为远程数据添加ID
+        const processedData = remoteData.map(item => ({
+          ...item,
+          id: genRemoteId(group.id, item),
+          type: item.type || 'link',
+        }));
+        
+        setRemoteCache(prev => ({
+          ...prev,
+          [group.id]: {
+            data: processedData,
+            timestamp: Date.now(),
+          },
+        }));
+      } else {
+        console.error('Invalid remote data format');
+      }
+    } catch (error) {
+      console.error('Failed to fetch remote group data:', error);
+    }
+  };
+
+  // 获取远程分组数据
+  useEffect(() => {
+    const remoteGroups = groups.filter(group => group.type === 'remote');
+    remoteGroups.forEach(group => {
+      fetchRemoteGroupData(group);
+    });
+  }, [groups, fetchRemoteGroupData]);
+
+  const clearRemoteGroupCache = (groupId: string) => {
+    setRemoteCache(prev => {
+      const newCache = { ...prev };
+      delete newCache[groupId];
+      return newCache;
+    });
+  };
+
   return {
     accessQuickLink,
     finalData,
@@ -258,5 +352,12 @@ export default function useQuickLinksDataLogic() {
     addItem,
     editItem,
     importData,
+    // 分组相关
+    groups,
+    selectedGroupId,
+    setSelectedGroupId,
+    clearGroupData,
+    fetchRemoteGroupData,
+    clearRemoteGroupCache,
   };
 }

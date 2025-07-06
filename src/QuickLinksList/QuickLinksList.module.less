@@ -8,10 +8,21 @@
     box-sizing: border-box;
   }
 
+  .container {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    flex-direction: column;
+  }
+
+  .groupBar {
+    flex-shrink: 0;
+  }
+
   .center {
     position: relative;
     display: flex;
-    height: 100%;
+    flex: 1;
     overflow: hidden;
     border-top: 1px solid var(--border-color);
   }
@@ -50,6 +61,20 @@
       .name {
         font-size: 14px;
         line-height: 1.5;
+        position: relative;
+        padding-left: 16px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: var(--group-color, #999);
+        }
       }
 
       .tips {
