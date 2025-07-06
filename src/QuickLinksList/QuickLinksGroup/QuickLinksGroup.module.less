@@ -1,0 +1,73 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--border-color, #999);
+  
+}
+
+.tag {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+  border: 1px solid var(--group-color, #999);
+  color: var(--group-color, --color);
+  border-radius: 4px;
+  padding: 0px 2px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+
+  &:hover {
+    background: var(--group-color, var(--background-color));
+    color: var(--color);
+  }
+
+  &.selected {
+    background: var(--group-color, var(--background-color));
+    color: var(--color);
+  }
+
+  &.addTag {
+    border-style: dashed;
+    color: #999;
+    
+    &:hover {
+      border-color: var(--blue, #1890ff);
+      color: var(--blue, #1890ff);
+    }
+  }
+}
+
+.groupName {
+  flex: 1;
+}
+
+.remoteIcon {
+  font-size: 10px;
+}
+
+.actions {
+  display: none;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.tag:hover .actions {
+  display: flex;
+}
+
+.actionIcon {
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+} 

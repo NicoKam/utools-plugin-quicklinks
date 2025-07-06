@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import QuickLinksList from './QuickLinksList';
 import Read from './Read';
 import useDarkThemeMode from './utils/useDarkThemeMode';
+import { HoxRoot } from 'hox';
 
 const { darkAlgorithm } = theme;
 
@@ -39,7 +40,9 @@ export default function App() {
         algorithm: darkMode ? darkAlgorithm : undefined,
       }}
     >
-      <AppContent />
+      <HoxRoot>
+        <AppContent />
+      </HoxRoot>
     </ConfigProvider>
   );
 };

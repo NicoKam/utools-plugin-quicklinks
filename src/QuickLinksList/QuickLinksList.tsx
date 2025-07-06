@@ -2,8 +2,8 @@
 import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
-import { Form, Input, message, Radio, Space } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Form, Input, message, Radio, Space, Select } from 'antd';
+import React, { useRef, useState, useEffect } from 'react';
 import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
 import { IQuickLinksItem } from '../storage';
@@ -15,6 +15,7 @@ import { hasParams, QuickLinksParamEditModal, replaceParams } from './QuickLinks
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
 import FooterLayout from './FooterLayout';
+import QuickLinksGroup from './QuickLinksGroup';
 
 export interface QuickLinksListProps extends
   Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
@@ -36,6 +37,11 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     editItem,
     removeCurrentItem,
     accessQuickLink,
+    groups,
+    selectedGroupId,
+    setSelectedGroupId,
+    clearGroupData,
+    clearRemoteGroupCache,
   } = useQuickLinksDataLogic();
 
   const [_this] = useState({
@@ -48,6 +54,14 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   const modal = usePromisifyModal();
 
   const modalOpen = modal.isOpen;
+
+
+
+  // 分组切换处理
+  const handleGroupChange = useMemoizedFn((groupId: string) => {
+    setSelectedGroupId(groupId);
+    setSelectIndex(0); // 重置选中索引
+  });
 
   // 记录访问过了
   const markAccessAndExit = (id: string) => {
@@ -104,7 +118,10 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     window.utools.subInputBlur();
     const okName = isEdit ? '编辑' : '添加';
 
-    const result = await modal.open<IQuickLinksItem>(
+    // 获取可选择的默认分组
+    const defaultGroups = groups.filter(group => group.type === 'default');
+
+    const result = await modal.open<IQuickLinksItem & { groupId?: string }>(
       <FormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消">
         <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
           <Input placeholder="请输入名称" autoFocus />
@@ -127,6 +144,17 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             }
           }
         </Form.Item>
+        {defaultGroups.length > 0 && (
+          <Form.Item name="groupId" label="分组">
+            <Select placeholder="无分组" allowClear>
+              {defaultGroups.map(group => (
+                <Select.Option key={group.id} value={group.id}>
+                  {group.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
       </FormModal>
     );
 
@@ -214,65 +242,89 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   const mainActionText = currentItem?.type === 'snippet' ? '粘贴内容' : '打开链接';
 
 
+  // 分组切换逻辑
+  const handleTabSwitch = useMemoizedFn(() => {
+    const allGroups = ['all', ...groups.map(g => g.id)];
+    const currentIndex = allGroups.indexOf(selectedGroupId);
+    const nextIndex = (currentIndex + 1) % allGroups.length;
+    handleGroupChange(allGroups[nextIndex]);
+  });
+
   // 快捷键相关逻辑
   useShortcutLogic({
     onMainAction: mainAction,
     onFind: () => {
       window.utools.subInputFocus();
     },
+    onTabSwitch: handleTabSwitch,
     enable: !modalOpen,
   });
 
 
   return (
     <FooterLayout className={`${styles.root} ${className}`} footerClassName={styles.footer} {...otherProps}>
-      <div className={styles.center}>
-        <div className={styles.list}>
-          {finalData.length === 0 && (
-            <div className={styles.empty}>
-              没有找到内容，请调整关键字
+      <div className={styles.container}>
+        {/* 列表区域 */}
+        <div className={styles.center}>
+          <div className={styles.list}>
+            {finalData.length === 0 && (
+              <div className={styles.empty}>
+                没有找到内容，请调整关键字
+              </div>
+            )}
+            {
+              finalData.map((item, index) => (
+                <React.Fragment key={index}>
+                  {item.timeRange && (
+                    <div className={styles.timeRange}>
+                      {item.timeRange}
+                    </div>
+                  )}
+                  <div
+                    className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
+                    key={index}
+                    onClick={() => { setSelectIndex(index); }}
+                    onDoubleClick={() => { mainAction(index); }}
+                    style={{
+                      '--group-color': item.groupId ? groups.find(g => g.id === item.groupId)?.color : '#999'
+                    } as React.CSSProperties}
+                  >
+                    <div className={styles.itemContent}>
+                      <div className={styles.name}>{item.name}</div>
+                      <div className={styles.tips} title={item.value}>{item.value}</div>
+                    </div>
+                    {/* icon */}
+                    <div className={styles.itemTips}>
+                      {index < 9 ? `#${index + 1}` : null}
+                    </div>
+                  </div>
+                </React.Fragment>
+
+              ))
+            }
+          </div>
+
+          {currentItem && (
+            <div className={styles.detail} ref={detailRef} tabIndex={-1}>
+              <div className={styles.preview}>
+                {currentItem.value}
+              </div>
+
+              <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} />
             </div>
           )}
-          {
-            finalData.map((item, index) => (
-              <React.Fragment key={index}>
-                {item.timeRange && (
-                  <div className={styles.timeRange}>
-                    {item.timeRange}
-                  </div>
-                )}
-                <div
-                  className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
-                  key={index}
-                  onClick={() => { setSelectIndex(index); }}
-                  onDoubleClick={() => { mainAction(index); }}
-                >
-                  <div className={styles.itemContent}>
-                    <div className={styles.name}>{item.name}</div>
-                    <div className={styles.tips} title={item.value}>{item.value}</div>
-                  </div>
-                  {/* icon */}
-                  <div className={styles.itemTips}>
-                    {index < 9 ? `#${index + 1}` : null}
-                  </div>
-                </div>
-              </React.Fragment>
-
-            ))
-          }
         </div>
 
-        {currentItem && (
-          <div className={styles.detail} ref={detailRef} tabIndex={-1}>
-            <div className={styles.preview}>
-              {currentItem.value}
-            </div>
-
-            <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} />
-          </div>
-        )}
-
-
+        {/* 分组 */}
+        <QuickLinksGroup
+          selectedGroupId={selectedGroupId}
+          onGroupChange={handleGroupChange}
+          onDeleteGroup={(groupId) => {
+            clearGroupData(groupId);
+            clearRemoteGroupCache(groupId);
+          }}
+          className={styles.groupBar}
+        />
       </div>
 
 

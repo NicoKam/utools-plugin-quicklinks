@@ -5,6 +5,7 @@ import { CmdKey } from './const';
 export interface UseShortcutLogicOptions {
   onMainAction?: (index?: number) => any;
   onFind?: () => any;
+  onTabSwitch?: () => any;
   enable?: boolean;
 }
 
@@ -16,7 +17,7 @@ const quickOpenShort = new Array(9)
 export default function useShortcutLogic(
   options: UseShortcutLogicOptions = {},
 ) {
-  const { onMainAction, onFind, enable = true } = options;
+  const { onMainAction, onFind, onTabSwitch, enable = true } = options;
   // 快速打开的快捷键
   useShortCutListener(
     quickOpenShort,
@@ -32,6 +33,14 @@ export default function useShortcutLogic(
   useShortCutListener(`${CmdKey}+F`, (e) => {
     if (e.target === document.body) {
       onFind?.();
+    }
+  }, { enable });
+
+  // Tab 切换分组
+  useShortCutListener('Tab', (e) => {
+    if (e.target === document.body) {
+      e.preventDefault();
+      onTabSwitch?.();
     }
   }, { enable });
 }
