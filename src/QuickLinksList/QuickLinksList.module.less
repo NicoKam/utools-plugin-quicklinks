@@ -1,8 +1,7 @@
 .root {
   position: relative;
-  display: flex;
-  flex-direction: column;
   height: 100vh;
+  min-height: 100vh;
   --border-color: rgba(180, 180, 180, 0.3);
 
   * {
@@ -12,7 +11,7 @@
   .center {
     position: relative;
     display: flex;
-    flex: 1;
+    height: 100%;
     overflow: hidden;
     border-top: 1px solid var(--border-color);
   }
