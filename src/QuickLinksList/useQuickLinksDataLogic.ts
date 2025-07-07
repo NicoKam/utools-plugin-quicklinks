@@ -1,6 +1,7 @@
 import { get } from 'lodash-es';
 import { pinyin } from 'pinyin-pro';
 import { useEffect, useMemo } from 'react';
+import { useMemoizedFn } from 'ahooks';
 import {
   IQuickLinksItem,
   IQuickLinksGroup,
@@ -80,6 +81,8 @@ export default function useQuickLinksDataLogic() {
   const remoteData = useMemo(() => Object.values(remoteCache)
     .map(item => item.data)
     .flat(), [remoteCache]);
+
+  console.log('wkn-remoteData', remoteData);
 
   // TODO 加载远程数据
 
@@ -300,7 +303,7 @@ export default function useQuickLinksDataLogic() {
   const accessQuickLink = (id: string) => {
     setAccessData(id, currentItemAccessData => ({
       lastAccessTime: Date.now(),
-      accessCount: (currentItemAccessData.accessCount || 0) + 1,
+      accessCount: (currentItemAccessData?.accessCount || 0) + 1,
     }));
   };
 
@@ -314,7 +317,7 @@ export default function useQuickLinksDataLogic() {
     ));
   };
 
-  const fetchRemoteGroupData = async (group: IQuickLinksGroup) => {
+  const fetchRemoteGroupData = useMemoizedFn(async (group: IQuickLinksGroup) => {
     if (group.type !== 'remote' || !group.remoteUrl) return;
 
     try {
@@ -333,6 +336,7 @@ export default function useQuickLinksDataLogic() {
           ...item,
           id: genRemoteId(group.id, item),
           type: item.type || 'link',
+          groupId: group.id,
         }));
 
         setRemoteCache(prev => ({
@@ -348,7 +352,7 @@ export default function useQuickLinksDataLogic() {
     } catch (error) {
       console.error('Failed to fetch remote group data:', error);
     }
-  };
+  });
 
   // 获取远程分组数据
   useEffect(() => {
@@ -356,7 +360,7 @@ export default function useQuickLinksDataLogic() {
     remoteGroups.forEach((group) => {
       fetchRemoteGroupData(group);
     });
-  }, [groups, fetchRemoteGroupData]);
+  }, [groups]);
 
   const clearRemoteGroupCache = (groupId: string) => {
     setRemoteCache((prev) => {
