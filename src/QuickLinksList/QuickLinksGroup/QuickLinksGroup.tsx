@@ -1,11 +1,11 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn } from 'ahooks';
-import { Form, Input, Modal, Radio, Select, message } from 'antd';
+import { Dropdown, Form, Input, Modal, Radio, Select, message } from 'antd';
 import React from 'react';
 import FormModal from '../../components/FormModal';
 import { IQuickLinksGroup, useQuickLinksGroupsState } from '../../storage';
 import { randomString } from '../../utils/randomString';
+import { useGlobalModal } from '../store';
 import { GROUP_COLORS, GROUP_COLOR_LABELS } from './const';
 import styles from './QuickLinksGroup.module.less';
 
@@ -23,7 +23,7 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
   className = '',
 }) => {
   const [groups, setGroups] = useQuickLinksGroupsState();
-  const modal = usePromisifyModal();
+  const modal = useGlobalModal();
   const [antdModal, modalContextHolder] = Modal.useModal();
 
   const newId = () => `group_${randomString(12)}`;
@@ -183,31 +183,38 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
 
       {/* 用户分组 */}
       {groups.map(group => (
-        <div
+        <Dropdown
           key={group.id}
-          className={`${styles.tag} ${selectedGroupId === group.id ? styles.selected : ''}`}
-          style={{ '--group-color': group.color } as React.CSSProperties}
-          onClick={() => { onGroupChange(group.id); }}
+          trigger={['contextMenu']}
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: '编辑',
+                onClick: () => editGroup(group),
+              },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: '删除',
+                onClick: () => deleteGroup(group),
+                danger: true,
+              },
+            ],
+          }}
         >
-          <span className={styles.groupName}>{group.name}</span>
-          {group.type === 'remote' && <span className={styles.remoteIcon}>🌐</span>}
-          <div className={styles.actions}>
-            <EditOutlined
-              className={styles.actionIcon}
-              onClick={(e) => {
-                e.stopPropagation();
-                editGroup(group);
-              }}
-            />
-            <DeleteOutlined
-              className={styles.actionIcon}
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteGroup(group);
-              }}
-            />
+          <div
+            className={`${styles.tag} ${selectedGroupId === group.id ? styles.selected : ''}`}
+            style={{ '--group-color': group.color } as React.CSSProperties}
+            onClick={() => { onGroupChange(group.id); }}
+          >
+            <span className={styles.groupName}>{group.name}</span>
+            {group.type === 'remote' && <span className={styles.remoteIcon}>🌐</span>}
+
           </div>
-        </div>
+        </Dropdown>
+
       ))}
 
       {/* 添加分组按钮 */}

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
-import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Form, Input, message, Radio, Select } from 'antd';
 import React, { useRef } from 'react';
@@ -8,15 +7,15 @@ import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
 import { IQuickLinksItem } from '../storage';
 import { CmdKey } from './const';
+import FooterLayout from './FooterLayout';
+import HighlightName from './HighlightName';
 import QuickLinksDetailInfo from './QuickLinksDetailInfo';
+import QuickLinksGroup from './QuickLinksGroup';
 import styles from './QuickLinksList.module.less';
 import { hasParams, QuickLinksParamEditModal } from './QuickLinksParamEdit';
+import { useGlobalModal } from './store';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
-import FooterLayout from './FooterLayout';
-import QuickLinksGroup from './QuickLinksGroup';
-import HighlightName from './HighlightName';
-import { GROUP_COLOR_LABELS } from './QuickLinksGroup/const';
 
 export interface QuickLinksListProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
 
@@ -51,7 +50,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   const detailRef = useRef<HTMLDivElement>(null);
 
 
-  const modal = usePromisifyModal();
+  const modal = useGlobalModal();
 
   const modalOpen = modal.isOpen;
 
