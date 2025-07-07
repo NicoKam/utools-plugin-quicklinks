@@ -2,28 +2,31 @@
 import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { usePromisifyModal } from '@orca-fe/hooks';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
-import { Form, Input, message, Radio, Space, Select } from 'antd';
-import React, { useRef, useState, useEffect } from 'react';
+import { Form, Input, message, Radio, Select } from 'antd';
+import React, { useRef } from 'react';
 import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
 import { IQuickLinksItem } from '../storage';
-import { useShortCutListener } from '../utils/shortcut';
 import { CmdKey } from './const';
 import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import styles from './QuickLinksList.module.less';
-import { hasParams, QuickLinksParamEditModal, replaceParams } from './QuickLinksParamEdit';
+import { hasParams, QuickLinksParamEditModal } from './QuickLinksParamEdit';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
 import FooterLayout from './FooterLayout';
 import QuickLinksGroup from './QuickLinksGroup';
+import HighlightName from './HighlightName';
+import { GROUP_COLOR_LABELS } from './QuickLinksGroup/const';
 
-export interface QuickLinksListProps extends
-  Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
+export interface QuickLinksListProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
 
 }
 
 const QuickLinksList = (props: QuickLinksListProps) => {
-  const { className = '', ...otherProps } = props;
+  const {
+    className = '',
+    ...otherProps
+  } = props;
 
   const {
     accessData,
@@ -44,9 +47,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     clearRemoteGroupCache,
   } = useQuickLinksDataLogic();
 
-  const [_this] = useState({
-    params: {} as Record<string, string>,
-  });
 
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +54,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   const modal = usePromisifyModal();
 
   const modalOpen = modal.isOpen;
-
 
 
   // 分组切换处理
@@ -93,7 +92,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             <QuickLinksParamEditModal
               open={Boolean(modalOpen)}
               template={currentItem.value}
-            />
+            />,
           );
           if (link) {
             window.utools.shellOpenExternal(link);
@@ -123,7 +122,16 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
     const result = await modal.open<IQuickLinksItem & { groupId?: string }>(
       <FormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消">
-        <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
+        <Form.Item
+          name="name"
+          label="名称"
+          rules={[
+            {
+              required: true,
+              message: '请输入名称',
+            },
+          ]}
+        >
           <Input placeholder="请输入名称" autoFocus />
         </Form.Item>
         <Form.Item name="type" label="类型">
@@ -137,8 +145,18 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             ({ getFieldValue }) => {
               const type = getFieldValue('type');
               return (
-                <Form.Item name="value" label="内容" rules={[{ required: true, message: type === 'link' ? '请输入链接' : '请输入文本片段' }]}>
-                  {type === 'link' ? <Input placeholder="请输入链接" /> : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
+                <Form.Item
+                  name="value"
+                  label="内容"
+                  rules={[
+                    {
+                      required: true,
+                      message: type === 'link' ? '请输入链接' : '请输入文本片段',
+                    },
+                  ]}
+                >
+                  {type === 'link' ? <Input placeholder="请输入链接" />
+                    : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
                 </Form.Item>
               );
             }
@@ -149,13 +167,23 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             <Select placeholder="无分组" allowClear>
               {defaultGroups.map(group => (
                 <Select.Option key={group.id} value={group.id}>
-                  {group.name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '2px',
+                        backgroundColor: group.color,
+                      }}
+                    />
+                    {group.name}
+                  </div>
                 </Select.Option>
               ))}
             </Select>
           </Form.Item>
         )}
-      </FormModal>
+      </FormModal>,
     );
 
     if (result) {
@@ -176,8 +204,11 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     // 如果当前聚焦的元素在 detail 内，且有选中内容，则不进行额外的复制操作
     if (
       detailRef.current?.contains(document.activeElement as Node) &&
-      window.getSelection()?.toString()
-        .trim()) return;
+      window.getSelection()
+        ?.toString()
+        .trim()) {
+      return;
+    }
     if (currentItem) {
       window.utools.copyText(currentItem.value);
       message.success(`已复制【${currentItem.name}】的值`, 1);
@@ -209,7 +240,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             <Radio value="merge">与旧数据合并</Radio>
           </Radio.Group>
         </Form.Item>
-      </FormModal>
+      </FormModal>,
     );
 
     if (result) {
@@ -243,10 +274,13 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
 
   // 分组切换逻辑
-  const handleTabSwitch = useMemoizedFn(() => {
+  const handleTabSwitch = useMemoizedFn((prev: boolean) => {
     const allGroups = ['all', ...groups.map(g => g.id)];
     const currentIndex = allGroups.indexOf(selectedGroupId);
-    const nextIndex = (currentIndex + 1) % allGroups.length;
+    let nextIndex = (currentIndex + (prev ? -1 : 1)) % allGroups.length;
+    if (nextIndex < 0) {
+      nextIndex = allGroups.length - 1;
+    }
     handleGroupChange(allGroups[nextIndex]);
   });
 
@@ -257,6 +291,9 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       window.utools.subInputFocus();
     },
     onTabSwitch: handleTabSwitch,
+    onNextItem: () => {
+      setSelectIndex(selectedIndex + 1);
+    },
     enable: !modalOpen,
   });
 
@@ -283,14 +320,18 @@ const QuickLinksList = (props: QuickLinksListProps) => {
                   <div
                     className={` ${styles.row} ${styles.item} ${styles.item}_${index} ${selectedIndex === index ? styles.selected : ''}`}
                     key={index}
-                    onClick={() => { setSelectIndex(index); }}
-                    onDoubleClick={() => { mainAction(index); }}
+                    onClick={() => {
+                      setSelectIndex(index);
+                    }}
+                    onDoubleClick={() => {
+                      mainAction(index);
+                    }}
                     style={{
-                      '--group-color': item.groupId ? groups.find(g => g.id === item.groupId)?.color : '#999'
+                      '--group-color': item.groupId ? groups.find(g => g.id === item.groupId)?.color : '#999',
                     } as React.CSSProperties}
                   >
                     <div className={styles.itemContent}>
-                      <div className={styles.name}>{item.name}</div>
+                      <HighlightName className={styles.name} value={item.name} match={item.match} />
                       <div className={styles.tips} title={item.value}>{item.value}</div>
                     </div>
                     {/* icon */}
@@ -340,10 +381,37 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         {
           !modalOpen && (
             <>
-              {currentItem && <ButtonWithIcon color={isDeleteConfirm ? 'red' : 'default'} shortcuts={`${CmdKey}+R`} onClick={removeCurrentItem}>{isDeleteConfirm ? '再次确认删除' : '删除'}</ButtonWithIcon>}
+              {currentItem && (
+                <ButtonWithIcon
+                  color={isDeleteConfirm ? 'red' : 'default'}
+                  shortcuts={`${CmdKey}+R`}
+                  onClick={removeCurrentItem}
+                >
+                  {isDeleteConfirm ? '再次确认删除' : '删除'}
+                </ButtonWithIcon>
+              )}
               {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
-              {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+C`} onClick={() => { copyItem(); }}>复制内容</ButtonWithIcon>}
-              {currentItem && <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={() => { mainAction(); }}>{mainActionText}</ButtonWithIcon>}
+              {currentItem && (
+                <ButtonWithIcon
+                  shortcuts={`${CmdKey}+C`}
+                  onClick={() => {
+                    copyItem();
+                  }}
+                >
+                  复制内容
+                </ButtonWithIcon>
+              )}
+              {currentItem && (
+                <ButtonWithIcon
+                  icon={<EnterOutlined />}
+                  shortcuts="Enter"
+                  onClick={() => {
+                    mainAction();
+                  }}
+                >
+                  {mainActionText}
+                </ButtonWithIcon>
+              )}
             </>
           )
         }

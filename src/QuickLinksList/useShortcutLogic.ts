@@ -5,8 +5,9 @@ import { CmdKey } from './const';
 export interface UseShortcutLogicOptions {
   onMainAction?: (index?: number) => any;
   onFind?: () => any;
-  onTabSwitch?: () => any;
+  onTabSwitch?: (prev: boolean) => any;
   enable?: boolean;
+  onNextItem?: () => void;
 }
 
 const quickOpenShort = new Array(9)
@@ -17,7 +18,7 @@ const quickOpenShort = new Array(9)
 export default function useShortcutLogic(
   options: UseShortcutLogicOptions = {},
 ) {
-  const { onMainAction, onFind, onTabSwitch, enable = true } = options;
+  const { onMainAction, onFind, onTabSwitch, onNextItem, enable = true } = options;
   // 快速打开的快捷键
   useShortCutListener(
     quickOpenShort,
@@ -36,11 +37,26 @@ export default function useShortcutLogic(
     }
   }, { enable });
 
-  // Tab 切换分组
+  // Ctrl + Tab 切换分组
+  useShortCutListener('Ctrl+Tab', (e) => {
+    if (e.target === document.body) {
+      e.preventDefault();
+      onTabSwitch?.(false);
+    }
+  }, { enable });
+
+  // Shift + Ctrl + Tab 向前切换分组
+  useShortCutListener('Ctrl+Shift+Tab', (e) => {
+    if (e.target === document.body) {
+      e.preventDefault();
+      onTabSwitch?.(true);
+    }
+  });
+
   useShortCutListener('Tab', (e) => {
     if (e.target === document.body) {
       e.preventDefault();
-      onTabSwitch?.();
+      onNextItem();
     }
-  }, { enable });
+  });
 }
