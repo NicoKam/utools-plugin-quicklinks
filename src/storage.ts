@@ -272,7 +272,7 @@ export function useSelectedGroupState() {
 }
 
 export function useRemoteGroupCacheState() {
-  const [cache, setCache] = useState<Record<string, { data: IQuickLinksItem[]; timestamp: number }>>(getRemoteGroupCache);
+  const [cache, setCache] = useState<Record<string, { data: (IQuickLinksItem & {pinyin?: string})[]; timestamp: number }>>(getRemoteGroupCache);
 
   useUpdateEffect(() => {
     setRemoteGroupCache(cache);

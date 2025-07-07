@@ -176,7 +176,7 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
       <div
         className={`${styles.tag} ${selectedGroupId === 'all' ? styles.selected : ''}`}
         onClick={() => { onGroupChange('all'); }}
-        style={{ '--group-color': '#F9443F' } as React.CSSProperties}
+        style={{ '--group-color': '#999999' } as React.CSSProperties}
       >
         全部
       </div>

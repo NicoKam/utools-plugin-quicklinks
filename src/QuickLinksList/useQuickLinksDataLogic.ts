@@ -19,9 +19,7 @@ import { CmdKey } from './const';
 
 const newId = () => `quick_${randomString(12)}`;
 
-const genRemoteId = (groupId: string, item: IQuickLinksItem) => {
-  return `remote_${groupId}____${item.name}____${item.value}`;
-}
+const genRemoteId = (groupId: string, item: IQuickLinksItem) => `remote_${groupId}____${item.name}____${item.value}`;
 
 function addPinyin(data: IQuickLinksItem[]) {
   return data.map((item) => {
@@ -34,7 +32,7 @@ function addPinyin(data: IQuickLinksItem[]) {
       ...item,
       pinyin: pinyinStr === item.name ? '' : pinyinStr,
     };
-  })
+  });
 }
 
 // 辅助函数：判断时间所属范围
@@ -67,7 +65,7 @@ export default function useQuickLinksDataLogic() {
   const [accessData, setAccessData, { clearAccessData }] =
     useQuickLinksAccessDataItem();
   // 分组数据
-  const [groups, setGroups] = useQuickLinksGroupsState();
+  const [groups] = useQuickLinksGroupsState();
   // 当前选中的分组
   const [selectedGroupId, setSelectedGroupId] = useSelectedGroupState();
   // 分组数据缓存
@@ -79,14 +77,14 @@ export default function useQuickLinksDataLogic() {
     [data],
   );
 
-  const remoteData = useMemo(() => Object.values(remoteCache).map(item => item.data).flat(), [remoteCache]);
+  const remoteData = useMemo(() => Object.values(remoteCache)
+    .map(item => item.data)
+    .flat(), [remoteCache]);
 
   // TODO 加载远程数据
 
   // 合并本地数据和远程数据
-  const allData = useMemo(() => {
-    return [...pinyinData, ...remoteData];
-  }, [pinyinData, remoteData]);
+  const allData = useMemo(() => [...pinyinData, ...remoteData], [pinyinData, remoteData]);
 
   // 按分组过滤数据
   const groupFilteredData = useMemo(() => {
@@ -99,36 +97,54 @@ export default function useQuickLinksDataLogic() {
   // 过滤关键字
   const filteredData = useMemo(() => {
     if (subInput) {
-      return groupFilteredData.filter(({ name, pinyin }) => {
-        // return name.includes(subInput);
-        if (matchesFuzzy2(subInput, name)) {
-          return true;
+      return groupFilteredData.map((item) => {
+        const { pinyin, name } = item;
+        const match = matchesFuzzy2(subInput, name);
+        if (match) {
+          return {
+            ...item,
+            match,
+          };
         }
-        if (pinyin && matchesFuzzy2(subInput, pinyin)) {
-          return true;
+        if (pinyin) {
+          const matchPinyin = matchesFuzzy2(subInput, pinyin);
+          if (matchPinyin) {
+            return {
+              ...item,
+              match: true,
+            };
+          }
         }
-        return false;
-      });
+        return {
+          ...item,
+          match: false,
+        };
+      })
+        .filter(item => Boolean(item.match));
     }
-    return groupFilteredData;
+    return groupFilteredData.map(item => ({
+      ...item,
+      match: false,
+    }));
   }, [subInput, groupFilteredData]);
 
   // 排序
   const finalData = useMemo(() => {
-    const sortedData = filteredData.slice().sort((a, b) => {
-      const dateA = get(
-        accessData,
-        [a.id, 'lastAccessTime'],
-        get(accessData, [a.id, 'updateTime'], 0),
-      );
-      const dateB = get(
-        accessData,
-        [b.id, 'lastAccessTime'],
-        get(accessData, [b.id, 'updateTime'], 0),
-      );
+    const sortedData = filteredData.slice()
+      .sort((a, b) => {
+        const dateA = get(
+          accessData,
+          [a.id, 'lastAccessTime'],
+          get(accessData, [a.id, 'updateTime'], 0),
+        );
+        const dateB = get(
+          accessData,
+          [b.id, 'lastAccessTime'],
+          get(accessData, [b.id, 'updateTime'], 0),
+        );
 
-      return dateB - dateA;
-    });
+        return dateB - dateA;
+      });
 
     let prevRange: string | null = null;
     return sortedData.map((item, index) => {
@@ -141,7 +157,10 @@ export default function useQuickLinksDataLogic() {
 
       if (index === 0 || currentRange !== prevRange) {
         prevRange = currentRange;
-        return { ...item, timeRange: currentRange };
+        return {
+          ...item,
+          timeRange: currentRange,
+        };
       }
       return {
         ...item,
@@ -158,7 +177,11 @@ export default function useQuickLinksDataLogic() {
 
   const currentItem = finalData.at(selectedIndex);
 
-  const { isConfirm, confirm, cancelConfirm } = useSecondaryConfirm();
+  const {
+    isConfirm,
+    confirm,
+    cancelConfirm,
+  } = useSecondaryConfirm();
 
   useEffect(() => {
     cancelConfirm();
@@ -283,8 +306,11 @@ export default function useQuickLinksDataLogic() {
 
   // 分组相关操作
   const clearGroupData = (groupId: string) => {
-    setData(data => data.map(item => 
-      item.groupId === groupId ? { ...item, groupId: undefined } : item
+    setData(data => data.map(item =>
+      item.groupId === groupId ? {
+        ...item,
+        groupId: undefined,
+      } : item,
     ));
   };
 
@@ -297,10 +323,10 @@ export default function useQuickLinksDataLogic() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const remoteData = await response.json();
-      
+
       // 验证远程数据格式
-      if (Array.isArray(remoteData) && remoteData.every(item => 
-        typeof item.name === 'string' && typeof item.value === 'string'
+      if (Array.isArray(remoteData) && remoteData.every(item =>
+        typeof item.name === 'string' && typeof item.value === 'string',
       )) {
         // 为远程数据添加ID
         const processedData = remoteData.map(item => ({
@@ -308,7 +334,7 @@ export default function useQuickLinksDataLogic() {
           id: genRemoteId(group.id, item),
           type: item.type || 'link',
         }));
-        
+
         setRemoteCache(prev => ({
           ...prev,
           [group.id]: {
@@ -327,14 +353,15 @@ export default function useQuickLinksDataLogic() {
   // 获取远程分组数据
   useEffect(() => {
     const remoteGroups = groups.filter(group => group.type === 'remote');
-    remoteGroups.forEach(group => {
+    remoteGroups.forEach((group) => {
       fetchRemoteGroupData(group);
     });
   }, [groups, fetchRemoteGroupData]);
 
   const clearRemoteGroupCache = (groupId: string) => {
-    setRemoteCache(prev => {
+    setRemoteCache((prev) => {
       const newCache = { ...prev };
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete newCache[groupId];
       return newCache;
     });
