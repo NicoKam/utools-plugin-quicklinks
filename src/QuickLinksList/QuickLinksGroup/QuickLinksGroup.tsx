@@ -224,8 +224,6 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
       >
         <PlusOutlined />
       </div>
-
-      {modal.instance}
       {modalContextHolder}
     </div>
   );
