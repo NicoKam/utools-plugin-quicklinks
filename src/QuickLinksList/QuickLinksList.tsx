@@ -13,7 +13,7 @@ import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import QuickLinksGroup from './QuickLinksGroup';
 import styles from './QuickLinksList.module.less';
 import { hasParams, QuickLinksParamEditModal } from './QuickLinksParamEdit';
-import { useGlobalModal } from './store';
+import { GlobalModalInstance, useGlobalModal } from './store';
 import useQuickLinksDataLogic from './useQuickLinksDataLogic';
 import useShortcutLogic from './useShortcutLogic';
 
@@ -415,7 +415,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
           )
         }
       </FooterLayout.Footer>
-      {modal.instance}
+      <GlobalModalInstance />
     </FooterLayout>
   );
 };

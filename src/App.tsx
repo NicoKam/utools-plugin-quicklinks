@@ -1,10 +1,9 @@
 import { ConfigProvider, theme } from 'antd';
-import React, { useEffect, useState } from 'react';
+import { HoxRoot } from 'hox';
+import { useEffect, useState } from 'react';
 import QuickLinksList from './QuickLinksList';
 import Read from './Read';
 import useDarkThemeMode from './utils/useDarkThemeMode';
-import { HoxRoot } from 'hox';
-import { GlobalModalInstance, useGlobalModal } from './QuickLinksList/store';
 
 const { darkAlgorithm } = theme;
 
@@ -43,8 +42,7 @@ export default function App() {
     >
       <HoxRoot>
         <AppContent />
-        <GlobalModalInstance />
       </HoxRoot>
     </ConfigProvider>
   );
-};
+}
