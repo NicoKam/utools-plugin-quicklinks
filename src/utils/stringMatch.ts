@@ -94,7 +94,7 @@ export function genChineseMatchFn(
           }
           charCount++;
         });
-        return pinyinArray.join('-').replace(/ü/g, 'v');
+        return pinyinArray.join(' ').replace(/ü/g, 'v');
       }
       [...value].forEach(() => {
         pinyinIndexMapping.push(charCount++);
@@ -104,7 +104,7 @@ export function genChineseMatchFn(
       }
       return value;
     })
-    .join('-');
+    .join(' ');
 
   const fn = genStringMatchFn(pinyinSentence);
 

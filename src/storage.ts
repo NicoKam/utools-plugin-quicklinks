@@ -272,9 +272,7 @@ export function useSelectedGroupState() {
 }
 
 type RemoteGroupCacheType = Record<string, {
-    data: (IQuickLinksItem & {
-      matchFn?: (keyword: string) => unknown;
-    })[];
+    data: IQuickLinksItem[];
     timestamp: number;
   }>;
 
