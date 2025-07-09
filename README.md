@@ -1,14 +1,12 @@
 # utools-plugin-quicklinks
 
-# utools-plugin-quicklinks
-
 ## 简介
 
 `utools-plugin-quicklinks` 是一款 uTools 插件，旨在帮助用户高效管理快捷链接和文本片段。借助该插件，你可以轻松记录各种常用链接和文本内容，并通过关键字进行快速搜索。对于链接，可实现一键跳转；对于文本片段，能一键粘贴到指定位置。
 
 ## 功能特点
 
-加入了 VSCode quickOpen 的模糊搜索能力。
+支持类似 VSCode quickOpen 的模糊搜索能力。
 
 > 之前 raycast 和 utools 两个都在用，但 raycast windows 版本一直出不来，且 raycast 的插件开发限制太多，没法实现自己需要的功能。
 > 所以打算全都转到 utools 上，这样 windows 和 mac 都能通用了。
@@ -18,5 +16,3 @@
 ## License
 
 This project is licensed under the MIT License.
-
-It includes code adapted from [Microsoft's VSCode project](https://github.com/microsoft/vscode), which is also licensed under the MIT License.
