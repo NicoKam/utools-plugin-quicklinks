@@ -271,8 +271,15 @@ export function useSelectedGroupState() {
   return [selectedGroupId, setSelectedGroupIdState] as const;
 }
 
+type RemoteGroupCacheType = Record<string, {
+    data: (IQuickLinksItem & {
+      matchFn?: (keyword: string) => unknown;
+    })[];
+    timestamp: number;
+  }>;
+
 export function useRemoteGroupCacheState() {
-  const [cache, setCache] = useState<Record<string, { data: (IQuickLinksItem & {pinyin?: string})[]; timestamp: number }>>(getRemoteGroupCache);
+  const [cache, setCache] = useState<RemoteGroupCacheType>(getRemoteGroupCache);
 
   useUpdateEffect(() => {
     setRemoteGroupCache(cache);

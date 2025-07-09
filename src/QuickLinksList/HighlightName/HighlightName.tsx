@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import styles from './HighlightName.module.less';
-import { IMatch } from '../../utils/vscode-utils/filters';
+import { MatchStatus } from '../../utils/stringMatch';
 
 export interface HighlightNameProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
   value?: string;
-  match?: (IMatch)[] | boolean;
+  match?: MatchStatus[] | boolean;
 }
 
 // ... existing code ...
@@ -22,10 +22,10 @@ const HighlightName = (props: HighlightNameProps) => {
         }
         parts.push(
           <span key={i} className={styles.highlight}>
-            {value.substring(m.start, m.end)}
+            {value.substring(m.start, m.end + 1)}
           </span>,
         );
-        lastIndex = m.end;
+        lastIndex = m.end + 1;
       });
 
       if (lastIndex < value.length) {
