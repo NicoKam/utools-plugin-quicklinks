@@ -62,16 +62,29 @@ export default function useQuickLinksDataLogic() {
   const [groups] = useQuickLinksGroupsState();
   // 当前选中的分组
   const [selectedGroupId, setSelectedGroupId] = useSelectedGroupState();
-  // 分组数据缓存
+
+  // 检查选中的分组是否存在，不存在则切换到所有分组
+  useEffect(() => {
+    if (
+      selectedGroupId &&
+      selectedGroupId !== 'all' &&
+      !groups.find(group => group.id === selectedGroupId)
+    ) {
+      setSelectedGroupId('all');
+    }
+  }, [groups, selectedGroupId]);
+
   const [remoteCache, setRemoteCache] = useRemoteGroupCacheState();
 
   const pinyinData = useMemo(() => addMatch(data), [data]);
 
   const remoteData = useMemo(
     () =>
-      Object.values(remoteCache)
-        .map(item => item.data)
-        .flat(),
+      addMatch(
+        Object.values(remoteCache)
+          .map(item => item.data)
+          .flat(),
+      ),
     [remoteCache],
   );
 
@@ -330,7 +343,7 @@ export default function useQuickLinksDataLogic() {
           setRemoteCache(prev => ({
             ...prev,
             [group.id]: {
-              data: addMatch(processedData),
+              data: processedData,
               timestamp: Date.now(),
             },
           }));
