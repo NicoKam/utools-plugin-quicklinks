@@ -114,8 +114,6 @@ export function genChineseMatchFn(
       return null;
     }
 
-    console.log('wkn-pinyinSentence', pinyinSentence, sentence);
-
     // 将匹配的结果映射回去
     return match.map(item => ({
       start: pinyinIndexMapping[item.start] ?? item.start,
