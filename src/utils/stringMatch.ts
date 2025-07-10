@@ -5,7 +5,7 @@ function genRegExpStrForWord(word: string, isInner = false): string {
     return '';
   }
   if (word.length < 2) {
-    return `${word}?`;
+    return `(${isInner ? '?:' : ''}${word}?)?`;
   }
   return `(${isInner ? '?:' : ''}${word[0]}${genRegExpStrForWord(
     word.slice(1),
@@ -25,13 +25,15 @@ export function genStringMatchFn(
   sentence: string,
 ): (keyword: string) => MatchStatus[] | null {
   // 拆分单词和 split
-  const wordAndSplit = sentence.split(/(\w+)/g);
+  const wordAndSplit = sentence.split(/(\w+|[\u4e00-\u9fa5])/g);
 
   // 为每一个单词或 split 生成一个捕获
   const regExpStr = wordAndSplit
     .map((word, index) => {
       const isWord = index % 2 === 1;
-      return isWord ? genRegExpStrForWord(word) : `(${[...word].join('?')})?`;
+      return isWord
+        ? genRegExpStrForWord(word)
+        : `(${[...word].map(char => `${char}?`).join('')})`;
     })
     .join('');
   // 生成正则表达式
@@ -94,24 +96,29 @@ export function genChineseMatchFn(
           }
           charCount++;
         });
-        return pinyinArray.join(' ').replace(/ü/g, 'v');
+        return pinyinArray.join('`').replace(/ü/g, 'v');
       }
       [...value].forEach(() => {
         pinyinIndexMapping.push(charCount++);
       });
-      if (index < pinyinSplit.length - 1) {
-        pinyinIndexMapping.push(charCount);
-      }
+      // if (index < pinyinSplit.length - 1) {
+      //   pinyinIndexMapping.push(charCount);
+      // }
       return value;
     })
-    .join(' ');
+    .join('');
 
-  const fn = genStringMatchFn(pinyinSentence);
+
+  // 拼音匹配
+  const pinyinMatchFn = genStringMatchFn(pinyinSentence);
+  // 原始匹配
+  const originMatchFn = genStringMatchFn(sentence);
 
   return (keyword) => {
-    const match = fn(keyword);
+    const match = pinyinMatchFn(keyword);
     if (!match) {
-      return null;
+      // 未能通过拼音
+      return originMatchFn(keyword);
     }
 
     // 将匹配的结果映射回去

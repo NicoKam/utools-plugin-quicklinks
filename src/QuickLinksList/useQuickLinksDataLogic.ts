@@ -176,6 +176,13 @@ export default function useQuickLinksDataLogic() {
 
   const currentItem = finalData.at(selectedIndex);
 
+  const currentItemGroup = useMemo(() => {
+    if (!currentItem) {
+      return undefined;
+    }
+    return groups.find(group => group.id === currentItem.groupId);
+  }, [currentItem, groups]);
+
   const { isConfirm, confirm, cancelConfirm } = useSecondaryConfirm();
 
   useEffect(() => {
@@ -377,6 +384,7 @@ export default function useQuickLinksDataLogic() {
     accessQuickLink,
     finalData,
     accessData,
+    currentItemGroup,
     selectedIndex,
     setSelectIndex,
     currentItem,
