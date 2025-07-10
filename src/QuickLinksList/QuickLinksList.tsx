@@ -31,6 +31,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     accessData,
     isDeleteConfirm,
     currentItem,
+    currentItemGroup,
     finalData,
     selectedIndex,
     importData,
@@ -46,6 +47,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     clearRemoteGroupCache,
   } = useQuickLinksDataLogic();
 
+  // 当前选中的元素是否 remote
+  const isRemote = currentItemGroup?.type === 'remote';
 
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -380,7 +383,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         {
           !modalOpen && (
             <>
-              {currentItem && (
+              {currentItem && !isRemote && (
                 <ButtonWithIcon
                   color={isDeleteConfirm ? 'red' : 'default'}
                   shortcuts={`${CmdKey}+R`}
@@ -389,7 +392,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
                   {isDeleteConfirm ? '再次确认删除' : '删除'}
                 </ButtonWithIcon>
               )}
-              {currentItem && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
+              {currentItem && !isRemote && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
               {currentItem && (
                 <ButtonWithIcon
                   shortcuts={`${CmdKey}+C`}
