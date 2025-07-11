@@ -40,31 +40,36 @@ export function genStringMatchFn(
         : `(${[...word].map(char => `${escapeWord(char)}?`).join('')})`;
     })
     .join('');
-  // 生成正则表达式
-  const regExp = new RegExp(`^${regExpStr}$`, 'i');
+  try {
+    // 生成正则表达式
+    const regExp = new RegExp(`^${regExpStr}$`, 'i');
 
-  return (keyword: string) => {
-    const match = regExp.exec(keyword);
-    if (!match) {
-      return null;
-    }
-
-    const matchStatus: MatchStatus[] = [];
-    let count = 0;
-    wordAndSplit.forEach((word, index) => {
-      // 检查是否匹配上了
-      const isMatch = match[index + 1];
-      if (isMatch) {
-        matchStatus.push({
-          start: count,
-          end: count + isMatch.length - 1,
-        });
+    return (keyword: string) => {
+      const match = regExp.exec(keyword);
+      if (!match) {
+        return null;
       }
-      count += word.length;
-    });
 
-    return matchStatus;
-  };
+      const matchStatus: MatchStatus[] = [];
+      let count = 0;
+      wordAndSplit.forEach((word, index) => {
+        // 检查是否匹配上了
+        const isMatch = match[index + 1];
+        if (isMatch) {
+          matchStatus.push({
+            start: count,
+            end: count + isMatch.length - 1,
+          });
+        }
+        count += word.length;
+      });
+
+      return matchStatus;
+    };
+  } catch (error) {
+    console.error('生成正则表达式失败', error);
+    return () => null;
+  }
 }
 
 export function genChineseMatchFn(
@@ -111,7 +116,6 @@ export function genChineseMatchFn(
       return value;
     })
     .join('');
-
 
   // 拼音匹配
   const pinyinMatchFn = genStringMatchFn(pinyinSentence);
