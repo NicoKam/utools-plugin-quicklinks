@@ -381,6 +381,7 @@ export default function useQuickLinksDataLogic() {
   };
 
   return {
+    data,
     accessQuickLink,
     finalData,
     accessData,

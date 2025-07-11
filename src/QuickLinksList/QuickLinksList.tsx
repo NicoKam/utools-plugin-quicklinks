@@ -32,6 +32,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     isDeleteConfirm,
     currentItem,
     currentItemGroup,
+    data, // 本地数据
     finalData,
     selectedIndex,
     importData,
@@ -226,7 +227,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         cancelText="关闭"
         initialValues={{
           importType: 'replace',
-          value: JSON.stringify(finalData.map(item => ({
+          value: JSON.stringify(data.map(item => ({
             name: item.name,
             type: item.type,
             value: item.value,
