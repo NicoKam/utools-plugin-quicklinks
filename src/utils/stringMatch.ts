@@ -1,13 +1,17 @@
 import { pinyin } from 'pinyin-pro';
 
+function escapeWord(word: string) {
+  return word.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 function genRegExpStrForWord(word: string, isInner = false): string {
   if (word.length === 0) {
     return '';
   }
   if (word.length < 2) {
-    return `(${isInner ? '?:' : ''}${word}?)?`;
+    return `(${isInner ? '?:' : ''}${escapeWord(word)}?)?`;
   }
-  return `(${isInner ? '?:' : ''}${word[0]}${genRegExpStrForWord(
+  return `(${isInner ? '?:' : ''}${escapeWord(word[0])}${genRegExpStrForWord(
     word.slice(1),
     true,
   )})?`;
@@ -33,7 +37,7 @@ export function genStringMatchFn(
       const isWord = index % 2 === 1;
       return isWord
         ? genRegExpStrForWord(word)
-        : `(${[...word].map(char => `${char}?`).join('')})`;
+        : `(${[...word].map(char => `${escapeWord(char)}?`).join('')})`;
     })
     .join('');
   // 生成正则表达式
