@@ -73,7 +73,7 @@ export function validateQuickLinks(
  * @returns 快捷链接数据
  */
 export function getQuickLinksData(): IQuickLinksItem[] {
-  const data = window.utools.dbStorage.getItem(QUICK_LINKS_STORAGE_KEY);
+  const data = window.utools?.dbStorage.getItem(QUICK_LINKS_STORAGE_KEY);
   if (validateQuickLinks(data)) {
     return data;
   }
@@ -85,7 +85,7 @@ export function getQuickLinksData(): IQuickLinksItem[] {
  * @param quickLinks 快捷链接数据
  */
 export function setQuickLinksData(quickLinks: IQuickLinksItem[]) {
-  window.utools.dbStorage.setItem(QUICK_LINKS_STORAGE_KEY, quickLinks);
+  window.utools?.dbStorage.setItem(QUICK_LINKS_STORAGE_KEY, quickLinks);
 }
 
 export function useQuickLinksDataState() {
@@ -103,7 +103,7 @@ export function getQuickLinksAccessData(): Record<
   string,
   IQuickLinksAccessData
   > {
-  const data = window.utools.dbStorage.getItem(
+  const data = window.utools?.dbStorage.getItem(
     QUICK_LINKS_ACCESS_DATA_STORAGE_KEY,
   );
   if (data && typeof data === 'object') {
@@ -115,7 +115,7 @@ export function getQuickLinksAccessData(): Record<
 export function setQuickLinksAccessData(
   accessData: Record<string, IQuickLinksAccessData>,
 ) {
-  window.utools.dbStorage.setItem(
+  window.utools?.dbStorage.setItem(
     QUICK_LINKS_ACCESS_DATA_STORAGE_KEY,
     accessData,
   );
@@ -200,7 +200,7 @@ export function validateQuickLinksGroups(
  * @returns 分组数据
  */
 export function getQuickLinksGroupsData(): IQuickLinksGroup[] {
-  const data = window.utools.dbStorage.getItem(QUICK_LINKS_GROUPS_STORAGE_KEY);
+  const data = window.utools?.dbStorage.getItem(QUICK_LINKS_GROUPS_STORAGE_KEY);
   if (validateQuickLinksGroups(data)) {
     return data;
   }
@@ -212,7 +212,7 @@ export function getQuickLinksGroupsData(): IQuickLinksGroup[] {
  * @param groups 分组数据
  */
 export function setQuickLinksGroupsData(groups: IQuickLinksGroup[]) {
-  window.utools.dbStorage.setItem(QUICK_LINKS_GROUPS_STORAGE_KEY, groups);
+  window.utools?.dbStorage.setItem(QUICK_LINKS_GROUPS_STORAGE_KEY, groups);
 }
 
 /**
@@ -220,7 +220,7 @@ export function setQuickLinksGroupsData(groups: IQuickLinksGroup[]) {
  * @returns 选中的分组ID，默认为 'all'
  */
 export function getSelectedGroupId(): string {
-  return window.utools.dbStorage.getItem(QUICK_LINKS_SELECTED_GROUP_STORAGE_KEY) || 'all';
+  return window.utools?.dbStorage.getItem(QUICK_LINKS_SELECTED_GROUP_STORAGE_KEY) || 'all';
 }
 
 /**
@@ -228,7 +228,7 @@ export function getSelectedGroupId(): string {
  * @param groupId 分组ID
  */
 export function setSelectedGroupId(groupId: string) {
-  window.utools.dbStorage.setItem(QUICK_LINKS_SELECTED_GROUP_STORAGE_KEY, groupId);
+  window.utools?.dbStorage.setItem(QUICK_LINKS_SELECTED_GROUP_STORAGE_KEY, groupId);
 }
 
 /**
@@ -236,7 +236,7 @@ export function setSelectedGroupId(groupId: string) {
  * @returns 远程分组缓存数据
  */
 export function getRemoteGroupCache(): Record<string, { data: IQuickLinksItem[]; timestamp: number }> {
-  const data = window.utools.dbStorage.getItem(QUICK_LINKS_REMOTE_CACHE_STORAGE_KEY);
+  const data = window.utools?.dbStorage.getItem(QUICK_LINKS_REMOTE_CACHE_STORAGE_KEY);
   if (data && typeof data === 'object') {
     return data;
   }
@@ -248,7 +248,7 @@ export function getRemoteGroupCache(): Record<string, { data: IQuickLinksItem[];
  * @param cache 缓存数据
  */
 export function setRemoteGroupCache(cache: Record<string, { data: IQuickLinksItem[]; timestamp: number }>) {
-  window.utools.dbStorage.setItem(QUICK_LINKS_REMOTE_CACHE_STORAGE_KEY, cache);
+  window.utools?.dbStorage.setItem(QUICK_LINKS_REMOTE_CACHE_STORAGE_KEY, cache);
 }
 
 export const [useQuickLinksGroupsState] = createGlobalStore(() => {

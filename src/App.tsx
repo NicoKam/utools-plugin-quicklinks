@@ -12,11 +12,11 @@ export function AppContent() {
   const [route, setRoute] = useState('quicklinks');
 
   useEffect(() => {
-    window.utools.onPluginEnter((action) => {
+    window.utools?.onPluginEnter((action) => {
       setRoute(action.code);
       setEnterAction(action);
     });
-    window.utools.onPluginOut((isKill) => {
+    window.utools?.onPluginOut((isKill) => {
       setRoute('');
     });
   }, []);
