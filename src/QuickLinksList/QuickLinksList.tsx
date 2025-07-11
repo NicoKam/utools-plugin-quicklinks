@@ -68,8 +68,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   // 记录访问过了
   const markAccessAndExit = (id: string) => {
     accessQuickLink(id);
-    window.utools.outPlugin();
-    window.utools.hideMainWindow();
+    window.utools?.outPlugin();
+    window.utools?.hideMainWindow();
   };
 
   // 默认行为
@@ -84,13 +84,13 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     if (currentItem) {
       if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
-        window.utools.hideMainWindowPasteText(currentItem.value);
+        window.utools?.hideMainWindowPasteText(currentItem.value);
         markAccessAndExit(currentItem.id);
       } else {
         const linkHasParams = hasParams(currentItem.value);
 
         if (linkHasParams) {
-          window.utools.subInputBlur();
+          window.utools?.subInputBlur();
           const link = await modal.open<string>(
             <QuickLinksParamEditModal
               open={Boolean(modalOpen)}
@@ -98,12 +98,12 @@ const QuickLinksList = (props: QuickLinksListProps) => {
             />,
           );
           if (link) {
-            window.utools.shellOpenExternal(link);
+            window.utools?.shellOpenExternal(link);
             markAccessAndExit(currentItem.id); // 注意，这里在上面设置了 selectIndex，所以才没问题，否则可能会出问题
           }
         } else {
           // links 打开浏览器
-          window.utools.shellOpenExternal(currentItem.value);
+          window.utools?.shellOpenExternal(currentItem.value);
           markAccessAndExit(currentItem.id);
         }
       }
@@ -117,7 +117,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
     const initialValue = isEdit ? currentItem : { type: 'link' };
 
-    window.utools.subInputBlur();
+    window.utools?.subInputBlur();
     const okName = isEdit ? '编辑' : '添加';
 
     // 获取可选择的默认分组
@@ -213,7 +213,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       return;
     }
     if (currentItem) {
-      window.utools.copyText(currentItem.value);
+      window.utools?.copyText(currentItem.value);
       message.success(`已复制【${currentItem.name}】的值`, 1);
     }
   };
@@ -291,7 +291,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   useShortcutLogic({
     onMainAction: mainAction,
     onFind: () => {
-      window.utools.subInputFocus();
+      window.utools?.subInputFocus();
     },
     onTabSwitch: handleTabSwitch,
     onNextItem: () => {

@@ -10,7 +10,7 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
   const [subInput, setSubInput] = useState('')
 
   useEffect(() => {
-    window.utools.setSubInput(({ text }) => {
+    window.utools?.setSubInput(({ text }) => {
       setSubInput(text);
     }, placeholder, isFocus);
   }, []);

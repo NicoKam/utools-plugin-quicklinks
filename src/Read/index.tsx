@@ -8,7 +8,7 @@ export default function Read({ enterAction }) {
 
   const handleOpenDialog = () => {
     // 通过 uTools 的 api 打开文件选择窗口
-    const files = window.utools.showOpenDialog({
+    const files = window.utools?.showOpenDialog({
       title: '选择文件',
       properties: ['openFile'],
     });
