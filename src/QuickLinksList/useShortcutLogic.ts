@@ -51,12 +51,12 @@ export default function useShortcutLogic(
       e.preventDefault();
       onTabSwitch?.(true);
     }
-  });
+  }, { enable });
 
   useShortCutListener('Tab', (e) => {
     if (e.target === document.body) {
       e.preventDefault();
-      onNextItem();
+      onNextItem?.();
     }
-  });
+  }, { enable });
 }
