@@ -1,5 +1,5 @@
 import { get } from 'lodash-es';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useMemoizedFn } from 'ahooks';
 import {
   IQuickLinksItem,
@@ -363,13 +363,32 @@ export default function useQuickLinksDataLogic() {
     },
   );
 
-  // 获取远程分组数据
-  useEffect(() => {
+  const lastFetchTimeRef = useRef(0);
+
+  const updateRemoteGroupsData = () => {
+    const lastFetchTime = lastFetchTimeRef.current;
+    const currentTime = Date.now();
+    if (currentTime - lastFetchTime < 60 * 1000) {
+      return;
+    }
+    lastFetchTimeRef.current = currentTime;
+
     const remoteGroups = groups.filter(group => group.type === 'remote');
     remoteGroups.forEach((group) => {
       fetchRemoteGroupData(group);
     });
+  };
+
+  // 获取远程分组数据
+  useEffect(() => {
+    updateRemoteGroupsData();
   }, [groups]);
+
+  useEffect(() => {
+    window.utools.onPluginEnter(() => {
+      updateRemoteGroupsData();
+    });
+  }, []);
 
   const clearRemoteGroupCache = (groupId: string) => {
     setRemoteCache((prev) => {
