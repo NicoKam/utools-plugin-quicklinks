@@ -1,4 +1,4 @@
-import { useMemoizedFn } from 'ahooks';
+import { useDocumentVisibility, useMemoizedFn } from 'ahooks';
 import { useEffect, useState } from 'react';
 
 export interface UseSubInputOptions {
@@ -10,6 +10,7 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
   const { placeholder = '搜索', isFocus = true } = options;
   const [subInput, setSubInput] = useState('');
 
+  const isVisible = useDocumentVisibility();
 
   const connectSubInput = useMemoizedFn(() => {
     setSubInput('');
@@ -31,6 +32,12 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
       disconnectSubInput();
     });
   }, []);
+
+  useEffect(() => {
+    if (isVisible) {
+      connectSubInput();
+    }
+  }, [isVisible]);
 
   return subInput;
 }
