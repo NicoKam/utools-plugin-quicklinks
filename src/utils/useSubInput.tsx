@@ -12,11 +12,16 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
 
   const isVisible = useDocumentVisibility();
 
-  const connectSubInput = useMemoizedFn(() => {
-    setSubInput('');
+  const connectSubInput = useMemoizedFn((clear = false) => {
+    if (clear) {
+      setSubInput('');
+    }
     window.utools?.setSubInput(({ text }) => {
       setSubInput(text);
     }, placeholder, isFocus);
+    if (!clear) {
+      window.utools?.setSubInputValue(subInput);
+    }
   });
 
   const disconnectSubInput = useMemoizedFn(() => {
@@ -24,9 +29,9 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
   });
 
   useEffect(() => {
-    connectSubInput();
+    connectSubInput(true);
     window.utools.onPluginEnter(() => {
-      connectSubInput();
+      connectSubInput(true);
     });
     window.utools.onPluginOut(() => {
       disconnectSubInput();
@@ -35,9 +40,9 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
 
   useEffect(() => {
     if (isVisible) {
-      connectSubInput();
+      connectSubInput(true);
     }
   }, [isVisible]);
 
-  return subInput;
+  return [subInput, { connectSubInput, disconnectSubInput }] as const;
 }

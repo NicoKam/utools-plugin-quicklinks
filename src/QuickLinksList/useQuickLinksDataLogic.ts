@@ -23,7 +23,7 @@ const genRemoteId = (groupId: string, item: IQuickLinksItem) =>
   `remote_${groupId}____${item.name}____${item.value}`;
 
 function addMatch(data: IQuickLinksItem[]) {
-  return data.map(item => ({
+  return data.map((item) => ({
     ...item,
     matchFn: genChineseMatchFn(item.name),
   }));
@@ -53,7 +53,7 @@ const getTimeRange = (timestamp: number) => {
  * 快捷链接数据逻辑
  */
 export default function useQuickLinksDataLogic() {
-  const subInput = useSubInput({ placeholder: `搜索(${CmdKey}+F)` });
+  const [subInput, {connectSubInput}] = useSubInput({ placeholder: `搜索(${CmdKey}+F)` });
 
   const [data, setData] = useQuickLinksDataState();
   const [accessData, setAccessData, { clearAccessData }] =
@@ -68,7 +68,7 @@ export default function useQuickLinksDataLogic() {
     if (
       selectedGroupId &&
       selectedGroupId !== 'all' &&
-      !groups.find(group => group.id === selectedGroupId)
+      !groups.find((group) => group.id === selectedGroupId)
     ) {
       setSelectedGroupId('all');
     }
@@ -82,7 +82,7 @@ export default function useQuickLinksDataLogic() {
     () =>
       addMatch(
         Object.values(remoteCache)
-          .map(item => item.data)
+          .map((item) => item.data)
           .flat(),
       ),
     [remoteCache],
@@ -99,7 +99,7 @@ export default function useQuickLinksDataLogic() {
     if (!selectedGroupId || selectedGroupId === 'all') {
       return allData;
     }
-    return allData.filter(item => item.groupId === selectedGroupId);
+    return allData.filter((item) => item.groupId === selectedGroupId);
   }, [allData, selectedGroupId]);
 
   // 过滤关键字
@@ -120,9 +120,9 @@ export default function useQuickLinksDataLogic() {
             match: false,
           };
         })
-        .filter(item => Boolean(item.match));
+        .filter((item) => Boolean(item.match));
     }
-    return groupFilteredData.map(item => ({
+    return groupFilteredData.map((item) => ({
       ...item,
       match: false,
     }));
@@ -180,7 +180,7 @@ export default function useQuickLinksDataLogic() {
     if (!currentItem) {
       return undefined;
     }
-    return groups.find(group => group.id === currentItem.groupId);
+    return groups.find((group) => group.id === currentItem.groupId);
   }, [currentItem, groups]);
 
   const { isConfirm, confirm, cancelConfirm } = useSecondaryConfirm();
@@ -198,7 +198,7 @@ export default function useQuickLinksDataLogic() {
   const addItem = (item: Omit<IQuickLinksItem, 'id'>) => {
     const id = newId();
 
-    setData(data => [
+    setData((data) => [
       ...data,
       {
         ...item,
@@ -220,13 +220,13 @@ export default function useQuickLinksDataLogic() {
    * @returns 是否编辑成功
    */
   const editItem = (id: string, newItem: Omit<IQuickLinksItem, 'id'>) => {
-    setData(data =>
-      data.map(item =>
+    setData((data) =>
+      data.map((item) =>
         item.id === id
           ? {
-            ...item,
-            ...newItem,
-          }
+              ...item,
+              ...newItem,
+            }
           : item,
       ),
     );
@@ -244,7 +244,7 @@ export default function useQuickLinksDataLogic() {
   const removeCurrentItem = () => {
     if (currentItem) {
       if (confirm()) {
-        setData(data.filter(item => item.id !== currentItem.id));
+        setData(data.filter((item) => item.id !== currentItem.id));
         setAccessData(currentItem.id, undefined);
         return true;
       }
@@ -261,7 +261,7 @@ export default function useQuickLinksDataLogic() {
   ) => {
     if (mode === 'replace') {
       clearAccessData();
-      const newDataWithId = newData.map(item => ({
+      const newDataWithId = newData.map((item) => ({
         ...item,
         id: newId(),
       }));
@@ -275,11 +275,11 @@ export default function useQuickLinksDataLogic() {
       });
     } else {
       const getKey = (item: IQuickLinksItem) => `${item.name}___${item.value}`;
-      const exists = new Set(data.map(item => getKey(item)));
+      const exists = new Set(data.map((item) => getKey(item)));
       const newDataWithId = newData
         // 合并模式，需要过滤已存在的内容
-        .filter(item => !exists.has(getKey(item)))
-        .map(item => ({
+        .filter((item) => !exists.has(getKey(item)))
+        .map((item) => ({
           ...item,
           id: `quick_${randomString(12)}`,
         }));
@@ -300,7 +300,7 @@ export default function useQuickLinksDataLogic() {
    * 记录快捷链接访问次数
    */
   const accessQuickLink = (id: string) => {
-    setAccessData(id, currentItemAccessData => ({
+    setAccessData(id, (currentItemAccessData) => ({
       lastAccessTime: Date.now(),
       accessCount: (currentItemAccessData?.accessCount || 0) + 1,
     }));
@@ -308,13 +308,13 @@ export default function useQuickLinksDataLogic() {
 
   // 分组相关操作
   const clearGroupData = (groupId: string) => {
-    setData(data =>
-      data.map(item =>
+    setData((data) =>
+      data.map((item) =>
         item.groupId === groupId
           ? {
-            ...item,
-            groupId: undefined,
-          }
+              ...item,
+              groupId: undefined,
+            }
           : item,
       ),
     );
@@ -335,19 +335,19 @@ export default function useQuickLinksDataLogic() {
         if (
           Array.isArray(remoteData) &&
           remoteData.every(
-            item =>
+            (item) =>
               typeof item.name === 'string' && typeof item.value === 'string',
           )
         ) {
           // 为远程数据添加ID
-          const processedData = remoteData.map(item => ({
+          const processedData = remoteData.map((item) => ({
             ...item,
             id: genRemoteId(group.id, item),
             type: item.type || 'link',
             groupId: group.id,
           }));
 
-          setRemoteCache(prev => ({
+          setRemoteCache((prev) => ({
             ...prev,
             [group.id]: {
               data: processedData,
@@ -373,7 +373,7 @@ export default function useQuickLinksDataLogic() {
     }
     lastFetchTimeRef.current = currentTime;
 
-    const remoteGroups = groups.filter(group => group.type === 'remote');
+    const remoteGroups = groups.filter((group) => group.type === 'remote');
     remoteGroups.forEach((group) => {
       fetchRemoteGroupData(group);
     });
@@ -420,5 +420,6 @@ export default function useQuickLinksDataLogic() {
     clearGroupData,
     fetchRemoteGroupData,
     clearRemoteGroupCache,
+    connectSubInput,
   };
 }
