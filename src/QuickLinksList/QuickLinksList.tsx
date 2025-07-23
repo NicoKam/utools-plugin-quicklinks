@@ -46,6 +46,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     setSelectedGroupId,
     clearGroupData,
     clearRemoteGroupCache,
+    connectSubInput,
   } = useQuickLinksDataLogic();
 
   // 当前选中的元素是否 remote
@@ -291,6 +292,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   useShortcutLogic({
     onMainAction: mainAction,
     onFind: () => {
+      connectSubInput();
       window.utools?.subInputFocus();
     },
     onTabSwitch: handleTabSwitch,
