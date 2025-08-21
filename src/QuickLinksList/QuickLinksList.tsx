@@ -100,11 +100,13 @@ const QuickLinksList = (props: QuickLinksListProps) => {
           );
           if (link) {
             window.utools?.shellOpenExternal(link);
+            setSelectIndex(0);
             markAccessAndExit(currentItem.id); // 注意，这里在上面设置了 selectIndex，所以才没问题，否则可能会出问题
           }
         } else {
           // links 打开浏览器
           window.utools?.shellOpenExternal(currentItem.value);
+          setSelectIndex(0);
           markAccessAndExit(currentItem.id);
         }
       }
