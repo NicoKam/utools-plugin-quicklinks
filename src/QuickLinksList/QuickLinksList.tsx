@@ -4,8 +4,8 @@ import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Form, Input, message, Radio, Select } from 'antd';
 import * as React from 'react';
 import { useRef } from 'react';
+import BaseLayoutFormModal from '../components/BaseLayoutFormModal';
 import ButtonWithIcon from '../components/ButtonWithIcon';
-import FormModal from '../components/FormModal';
 import BaseLayout from './BaseLayout';
 import { CmdKey } from './const';
 import HighlightName from './HighlightName';
@@ -127,7 +127,7 @@ function QuickLinksList(props: QuickLinksListProps) {
     const defaultGroups = groups.filter(group => group.type === 'default');
 
     const result = await modal.open<IQuickLinksItem & { groupId?: string }>(
-      <FormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消">
+      <BaseLayoutFormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消">
         <Form.Item
           name="name"
           label="名称"
@@ -190,7 +190,7 @@ function QuickLinksList(props: QuickLinksListProps) {
             </Select>
           </Form.Item>
         )}
-      </FormModal>,
+      </BaseLayoutFormModal>,
     );
 
     if (result) {
@@ -224,7 +224,7 @@ function QuickLinksList(props: QuickLinksListProps) {
 
   const importExportData = async () => {
     const result = await modal.open<{ value: string; importType: 'replace' | 'merge' }>(
-      <FormModal
+      <BaseLayoutFormModal
         title="导入导出"
         okText="保存"
         cancelText="关闭"
@@ -246,7 +246,7 @@ function QuickLinksList(props: QuickLinksListProps) {
             <Radio value="merge">与旧数据合并</Radio>
           </Radio.Group>
         </Form.Item>
-      </FormModal>,
+      </BaseLayoutFormModal>,
     );
 
     if (result) {

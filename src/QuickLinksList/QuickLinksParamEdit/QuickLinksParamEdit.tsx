@@ -1,12 +1,10 @@
-import type { QuickLinksModalProps } from '../../components/QuickLinksModal';
+import type { BaseLayoutModalProps } from '../../components/BaseLayoutModal';
 import { EnterOutlined } from '@ant-design/icons';
 import { useControllableValue, useDebounce } from 'ahooks';
 import * as React from 'react';
 import { useState } from 'react';
-import ButtonWithIcon from '../../components/ButtonWithIcon';
+import BaseLayoutModal from '../../components/BaseLayoutModal';
 import EditableDiv from '../../components/EditableDiv';
-import QuickLinksModal from '../../components/QuickLinksModal';
-import BaseLayout from '../BaseLayout';
 import styles from './QuickLinksParamEdit.module.less';
 
 const emptyObj = {} as never;
@@ -67,7 +65,7 @@ function QuickLinksParamEdit(props: QuickLinksParamEditProps) {
 
 export default QuickLinksParamEdit;
 
-export interface QuickLinksParamEditModalProps extends Omit<QuickLinksModalProps, 'onOk'> {
+export interface QuickLinksParamEditModalProps extends Omit<BaseLayoutModalProps, 'onOk'> {
   template?: string;
   onOk?: (value: string) => void;
 }
@@ -88,7 +86,14 @@ export function QuickLinksParamEditModal(props: QuickLinksParamEditModalProps) {
   };
 
   return (
-    <QuickLinksModal {...otherProps} open={open} onOk={handleOk}>
+    <BaseLayoutModal
+      {...otherProps}
+      open={open}
+      onOk={handleOk}
+      okText="打开链接"
+      okIcon={<EnterOutlined />}
+      okShortcuts="Enter"
+    >
       <div className={styles.modalContent}>
         <div className={styles.quickLinkParamEdit}>
           {template && (open || delayOpen) && (
@@ -103,10 +108,6 @@ export function QuickLinksParamEditModal(props: QuickLinksParamEditModalProps) {
 
         <span className={styles.tips}>请补充链接参数，使用 Tab 切换多个参数。按下 Enter 打开链接</span>
       </div>
-      <BaseLayout.Footer zIndex={1}>
-        <BaseLayout.Splitter />
-        <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={handleOk}>打开链接</ButtonWithIcon>
-      </BaseLayout.Footer>
-    </QuickLinksModal>
+    </BaseLayoutModal>
   );
 }
