@@ -4,7 +4,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,css,less,html,md}": "eslint --fix"
   },
   "dependencies": {
     "@ant-design/icons": "6.1.1",
@@ -30,6 +34,8 @@
     "eslint": "^10.2.0",
     "eslint-plugin-format": "^2.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "typescript": "^5.9.3",
     "typescript-plugin-css-modules": "5.2.0",
     "utools-api-types": "^7.5.1",

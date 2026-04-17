@@ -127,7 +127,7 @@ function QuickLinksList(props: QuickLinksListProps) {
     const defaultGroups = groups.filter(group => group.type === 'default');
 
     const result = await modal.open<IQuickLinksItem & { groupId?: string }>(
-      <BaseLayoutFormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消">
+      <BaseLayoutFormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消" formProps={{ style: { maxWidth: 800, margin: 'auto' } }}>
         <Form.Item
           name="name"
           label="名称"
@@ -255,6 +255,7 @@ function QuickLinksList(props: QuickLinksListProps) {
         importData(json, result.importType);
         message.success('导入成功');
       } catch (error) {
+        console.error(error);
         message.error('导入失败，数据格式错误');
       }
     } else {
