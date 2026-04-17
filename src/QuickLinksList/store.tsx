@@ -12,6 +12,5 @@ export function GlobalModalInstance() {
       modal.destroy();
     });
   }, [modal]);
-  // eslint-disable-next-line react/react-in-jsx-scope
   return <>{modal.instance}</>;
 }

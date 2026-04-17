@@ -6,7 +6,7 @@ import { useState } from 'react';
 import ButtonWithIcon from '../../components/ButtonWithIcon';
 import EditableDiv from '../../components/EditableDiv';
 import QuickLinksModal from '../../components/QuickLinksModal';
-import FooterLayout from '../FooterLayout';
+import BaseLayout from '../BaseLayout';
 import styles from './QuickLinksParamEdit.module.less';
 
 const emptyObj = {} as never;
@@ -103,9 +103,10 @@ export function QuickLinksParamEditModal(props: QuickLinksParamEditModalProps) {
 
         <span className={styles.tips}>请补充链接参数，使用 Tab 切换多个参数。按下 Enter 打开链接</span>
       </div>
-      <FooterLayout.Footer position="right">
+      <BaseLayout.Footer zIndex={1}>
+        <BaseLayout.Splitter />
         <ButtonWithIcon icon={<EnterOutlined />} shortcuts="Enter" onClick={handleOk}>打开链接</ButtonWithIcon>
-      </FooterLayout.Footer>
+      </BaseLayout.Footer>
     </QuickLinksModal>
   );
 }

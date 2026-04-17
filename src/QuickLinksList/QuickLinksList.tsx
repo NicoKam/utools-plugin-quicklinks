@@ -6,8 +6,8 @@ import * as React from 'react';
 import { useRef } from 'react';
 import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
+import BaseLayout from './BaseLayout';
 import { CmdKey } from './const';
-import FooterLayout from './FooterLayout';
 import HighlightName from './HighlightName';
 import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import QuickLinksGroup from './QuickLinksGroup';
@@ -302,7 +302,7 @@ function QuickLinksList(props: QuickLinksListProps) {
   });
 
   return (
-    <FooterLayout className={`${styles.root} ${className}`} footerClassName={styles.footer} {...otherProps}>
+    <BaseLayout className={`${styles.root} ${className}`} footerClassName={styles.footer} {...otherProps}>
       <div className={styles.container}>
         {/* 列表区域 */}
         <div className={styles.center}>
@@ -371,55 +371,48 @@ function QuickLinksList(props: QuickLinksListProps) {
         />
       </div>
 
-      <FooterLayout.Footer position="left">
+      <BaseLayout.Footer>
         {!modalOpen && (
           <>
             <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
             <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
+            <BaseLayout.Splitter />
+            {currentItem && !isRemote && (
+              <ButtonWithIcon
+                color={isDeleteConfirm ? 'red' : 'default'}
+                shortcuts={`${CmdKey}+R`}
+                onClick={removeCurrentItem}
+              >
+                {isDeleteConfirm ? '再次确认删除' : '删除'}
+              </ButtonWithIcon>
+            )}
+            {currentItem && !isRemote && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
+            {currentItem && (
+              <ButtonWithIcon
+                shortcuts={`${CmdKey}+C`}
+                onClick={() => {
+                  copyItem();
+                }}
+              >
+                复制内容
+              </ButtonWithIcon>
+            )}
+            {currentItem && (
+              <ButtonWithIcon
+                icon={<EnterOutlined />}
+                shortcuts="Enter"
+                onClick={() => {
+                  mainAction();
+                }}
+              >
+                {mainActionText}
+              </ButtonWithIcon>
+            )}
           </>
         )}
-      </FooterLayout.Footer>
-      <FooterLayout.Footer position="right">
-        {
-          !modalOpen && (
-            <>
-              {currentItem && !isRemote && (
-                <ButtonWithIcon
-                  color={isDeleteConfirm ? 'red' : 'default'}
-                  shortcuts={`${CmdKey}+R`}
-                  onClick={removeCurrentItem}
-                >
-                  {isDeleteConfirm ? '再次确认删除' : '删除'}
-                </ButtonWithIcon>
-              )}
-              {currentItem && !isRemote && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
-              {currentItem && (
-                <ButtonWithIcon
-                  shortcuts={`${CmdKey}+C`}
-                  onClick={() => {
-                    copyItem();
-                  }}
-                >
-                  复制内容
-                </ButtonWithIcon>
-              )}
-              {currentItem && (
-                <ButtonWithIcon
-                  icon={<EnterOutlined />}
-                  shortcuts="Enter"
-                  onClick={() => {
-                    mainAction();
-                  }}
-                >
-                  {mainActionText}
-                </ButtonWithIcon>
-              )}
-            </>
-          )
-        }
-      </FooterLayout.Footer>
+      </BaseLayout.Footer>
       <GlobalModalInstance />
-    </FooterLayout>
+    </BaseLayout>
   );
 }
 
