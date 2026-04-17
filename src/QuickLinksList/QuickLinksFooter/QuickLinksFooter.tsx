@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import styles from './QuickLinksFooter.module.less';
 
 export interface QuickLinksFooterProps extends
@@ -6,13 +6,13 @@ export interface QuickLinksFooterProps extends
 
 }
 
-const QuickLinksFooter = (props: QuickLinksFooterProps) => {
+function QuickLinksFooter(props: QuickLinksFooterProps) {
   const { className = '', ...otherProps } = props;
   return (
     <div className={`${styles.root} ${className}`} {...otherProps}>
 
     </div>
   );
-};
+}
 
 export default QuickLinksFooter;

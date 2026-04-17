@@ -1,10 +1,10 @@
-import ReactDOM from 'react-dom/client'
-import './main.css'
-import App from './App.jsx'
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './main.css';
 
-const root = document.getElementById('root')
+const root = document.getElementById('root');
 if (root) {
-  ReactDOM.createRoot(root).render(<App />)
+  ReactDOM.createRoot(root).render(<App />);
 } else {
-  console.error('root不存在')
+  console.error('root不存在');
 }

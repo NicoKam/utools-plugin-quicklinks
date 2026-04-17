@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useMemoizedFn, useUpdateEffect, useEventListener } from 'ahooks';
+import { useEventListener, useMemoizedFn, useUpdateEffect } from 'ahooks';
+import { useMemo, useState } from 'react';
 
 /**
  * @description `useSelectIndex` 的选项
@@ -60,7 +60,8 @@ export default function useSelectIndex(options: UseSelectIndexOptions) {
    * @description 索引加一
    */
   const increment = useMemoizedFn(() => {
-    if (maxLength <= 0) return;
+    if (maxLength <= 0)
+      return;
     setSelectedIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex >= maxLength && loop) {
@@ -74,7 +75,8 @@ export default function useSelectIndex(options: UseSelectIndexOptions) {
    * @description 索引减一
    */
   const decrement = useMemoizedFn(() => {
-    if (maxLength <= 0) return;
+    if (maxLength <= 0)
+      return;
     setSelectedIndex((prevIndex) => {
       const nextIndex = prevIndex - 1;
       if (nextIndex < 0 && loop) {

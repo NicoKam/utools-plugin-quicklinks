@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useShortCutListener } from '../utils/shortcut';
 import { CmdKey } from './const';
 
@@ -10,7 +9,7 @@ export interface UseShortcutLogicOptions {
   onNextItem?: () => void;
 }
 
-const quickOpenShort = new Array(9)
+const quickOpenShort = Array.from({ length: 9 })
   .fill(0)
   .map((_, index) => [`Ctrl+${index + 1}`, `Cmd+${index + 1}`])
   .flat();

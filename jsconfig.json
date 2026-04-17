@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "allowJs": true,
     "types": [
       "utools-api-types"
-    ]
+    ],
+    "allowJs": true
   },
   "include": [
     "src/**/*.jsx",

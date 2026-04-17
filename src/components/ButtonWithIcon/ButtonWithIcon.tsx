@@ -1,5 +1,7 @@
-import { Button, ButtonProps } from 'antd';
-import React, { ReactNode } from 'react';
+import type { ButtonProps } from 'antd';
+import type { ReactNode } from 'react';
+import { Button } from 'antd';
+import * as React from 'react';
 import { useShortCutListener } from '../../utils/shortcut';
 import styles from './ButtonWithIcon.module.less';
 
@@ -30,7 +32,7 @@ const ButtonWithIcon = (props: ButtonWithIconProps) => {
       // 直接调用 onClick，不传递事件参数
       onClick?.(e);
     },
-    { enable: typeof shortcuts === 'string' ? shortcuts.length > 0 : Array.isArray(shortcuts) && shortcuts.length > 0 }
+    { enable: typeof shortcuts === 'string' ? shortcuts.length > 0 : Array.isArray(shortcuts) && shortcuts.length > 0 },
   );
 
   // 如果没有传入 icon，但有 shortcuts，则显示第一个快捷键
@@ -43,7 +45,9 @@ const ButtonWithIcon = (props: ButtonWithIconProps) => {
       variant="text"
       iconPosition="end"
       icon={displayIcon ? <div className={styles.icon}>{displayIcon}</div> : null}
-      onClick={(e) => { onClick?.(e.nativeEvent); }}
+      onClick={(e) => {
+        onClick?.(e.nativeEvent);
+      }}
       {...restProps}
     />
   );

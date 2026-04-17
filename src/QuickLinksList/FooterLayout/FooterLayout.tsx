@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useRef, ReactNode, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './FooterLayout.module.less';
 
@@ -12,13 +14,13 @@ interface FooterContextType {
 const FooterContext = createContext<FooterContextType | null>(null);
 
 // Context Hook
-const useFooterContext = () => {
+function useFooterContext() {
   const context = useContext(FooterContext);
   if (!context) {
     throw new Error('FooterLayout.Footer must be used within FooterLayout');
   }
   return context;
-};
+}
 
 export interface FooterLayoutProps extends
   Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
@@ -27,11 +29,10 @@ export interface FooterLayoutProps extends
   footerClassName?: string;
 }
 
-const FooterLayout = (props: FooterLayoutProps) => {
+function FooterLayout(props: FooterLayoutProps) {
   const { className = '', children, footerClassName, ...otherProps } = props;
   const [leftElement, setLeftElement] = useState<HTMLElement | null>(null);
   const [rightElement, setRightElement] = useState<HTMLElement | null>(null);
-
 
   return (
     <FooterContext.Provider value={{ leftElement, rightElement }}>
@@ -46,7 +47,7 @@ const FooterLayout = (props: FooterLayoutProps) => {
       </div>
     </FooterContext.Provider>
   );
-};
+}
 
 // Footer 子组件接口
 export interface FooterProps {

@@ -89,8 +89,8 @@ export function setQuickLinksData(quickLinks: IQuickLinksItem[]) {
 }
 
 export function useQuickLinksDataState() {
-  const [quickLinks, setQuickLinks] =
-    useState<IQuickLinksItem[]>(getQuickLinksData);
+  const [quickLinks, setQuickLinks]
+    = useState<IQuickLinksItem[]>(getQuickLinksData);
 
   useUpdateEffect(() => {
     setQuickLinksData(quickLinks);
@@ -102,7 +102,7 @@ export function useQuickLinksDataState() {
 export function getQuickLinksAccessData(): Record<
   string,
   IQuickLinksAccessData
-  > {
+> {
   const data = window.utools?.dbStorage.getItem(
     QUICK_LINKS_ACCESS_DATA_STORAGE_KEY,
   );
@@ -144,7 +144,6 @@ export function useQuickLinksAccessDataItem() {
       } else {
         _setAccessData((prev) => {
           const newAccessData = { ...prev };
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete newAccessData[id];
           return newAccessData;
         });
@@ -181,12 +180,12 @@ export function validateQuickLinksGroups(
 
   for (const group of groups) {
     if (
-      typeof group.id !== 'string' ||
-      typeof group.name !== 'string' ||
-      typeof group.color !== 'string' ||
-      !['default', 'remote'].includes(group.type) ||
-      typeof group.createTime !== 'number' ||
-      typeof group.updateTime !== 'number'
+      typeof group.id !== 'string'
+      || typeof group.name !== 'string'
+      || typeof group.color !== 'string'
+      || !['default', 'remote'].includes(group.type)
+      || typeof group.createTime !== 'number'
+      || typeof group.updateTime !== 'number'
     ) {
       return false;
     }
@@ -272,9 +271,9 @@ export function useSelectedGroupState() {
 }
 
 type RemoteGroupCacheType = Record<string, {
-    data: IQuickLinksItem[];
-    timestamp: number;
-  }>;
+  data: IQuickLinksItem[];
+  timestamp: number;
+}>;
 
 export function useRemoteGroupCacheState() {
   const [cache, setCache] = useState<RemoteGroupCacheType>(getRemoteGroupCache);

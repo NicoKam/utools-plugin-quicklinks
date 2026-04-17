@@ -1,12 +1,13 @@
+import type { IQuickLinksGroup } from '../../storage';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMemoizedFn } from 'ahooks';
-import { Dropdown, Form, Input, Modal, Radio, Select, message } from 'antd';
-import React from 'react';
+import { Dropdown, Form, Input, message, Modal, Radio, Select } from 'antd';
+import * as React from 'react';
 import FormModal from '../../components/FormModal';
-import { IQuickLinksGroup, useQuickLinksGroupsState } from '../../storage';
+import { useQuickLinksGroupsState } from '../../storage';
 import { randomString } from '../../utils/randomString';
 import { useGlobalModal } from '../store';
-import { GROUP_COLORS, GROUP_COLOR_LABELS } from './const';
+import { GROUP_COLOR_LABELS, GROUP_COLORS } from './const';
 import styles from './QuickLinksGroup.module.less';
 
 export interface QuickLinksGroupProps {
@@ -63,11 +64,13 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
         <Form.Item noStyle dependencies={['type']}>
           {({ getFieldValue }) => {
             const type = getFieldValue('type');
-            return type === 'remote' ? (
-              <Form.Item name="remoteUrl" label="远程URL" rules={[{ required: true, message: '请输入远程URL' }]}>
-                <Input placeholder="请输入远程URL" />
-              </Form.Item>
-            ) : null;
+            return type === 'remote'
+              ? (
+                <Form.Item name="remoteUrl" label="远程URL" rules={[{ required: true, message: '请输入远程URL' }]}>
+                  <Input placeholder="请输入远程URL" />
+                </Form.Item>
+              )
+              : null;
           }}
         </Form.Item>
       )}
@@ -85,7 +88,6 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
     const okText = isEdit ? '保存' : '添加';
     const cancelText = '取消';
 
-
     // 根据已有分组数量自动选择默认颜色
     const getDefaultColor = () => {
       const usedColors = groups.map(g => g.color);
@@ -93,12 +95,14 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
       return availableColor || GROUP_COLORS[0];
     };
 
-    const initialValues = isEdit ? group : {
-      name: `分组${groups.length + 1}`,
-      color: getDefaultColor(),
-      type: 'default',
-      remoteUrl: '',
-    };
+    const initialValues = isEdit
+      ? group
+      : {
+        name: `分组${groups.length + 1}`,
+        color: getDefaultColor(),
+        type: 'default',
+        remoteUrl: '',
+      };
 
     const result = await modal.open<IQuickLinksGroup>(
       <FormModal
@@ -111,7 +115,7 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
         }}
       >
         {renderFormFields(isEdit, group)}
-      </FormModal>
+      </FormModal>,
     );
 
     if (result) {
@@ -130,7 +134,7 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
         setGroups(prev => prev.map(g =>
           g.id === group.id
             ? { ...g, name: result.name, color: result.color, remoteUrl: result.remoteUrl, updateTime: Date.now() }
-            : g
+            : g,
         ));
         message.success('分组更新成功');
       } else {
@@ -175,7 +179,9 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
       {/* 全部分组 */}
       <div
         className={`${styles.tag} ${selectedGroupId === 'all' ? styles.selected : ''}`}
-        onClick={() => { onGroupChange('all'); }}
+        onClick={() => {
+          onGroupChange('all');
+        }}
         style={{ '--group-color': '#999999' } as React.CSSProperties}
       >
         全部
@@ -207,7 +213,9 @@ const QuickLinksGroup: React.FC<QuickLinksGroupProps> = ({
           <div
             className={`${styles.tag} ${selectedGroupId === group.id ? styles.selected : ''}`}
             style={{ '--group-color': group.color } as React.CSSProperties}
-            onClick={() => { onGroupChange(group.id); }}
+            onClick={() => {
+              onGroupChange(group.id);
+            }}
           >
             <span className={styles.groupName}>{group.name}</span>
             {group.type === 'remote' && <span className={styles.remoteIcon}>🌐</span>}

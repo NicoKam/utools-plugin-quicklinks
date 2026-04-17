@@ -1,9 +1,9 @@
-import React from 'react';
-import styles from './QuickLinksDetailInfo.module.less';
+import type { IQuickLinksAccessData, IQuickLinksItem } from '../../storage';
+import * as React from 'react';
 import DateTimeDisplay from '../../components/DateTimeDisplay';
-import EnumDisplay from '../../components/EnumDisplay';
-import { IQuickLinksAccessData, IQuickLinksItem } from '../../storage';
 import EmptyHolder from '../../components/EmptyHolder';
+import EnumDisplay from '../../components/EnumDisplay';
+import styles from './QuickLinksDetailInfo.module.less';
 
 export interface QuickLinksDetailInfoProps extends
   Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
@@ -11,7 +11,7 @@ export interface QuickLinksDetailInfoProps extends
   accessData?: IQuickLinksAccessData;
 }
 
-const QuickLinksDetailInfo = (props: QuickLinksDetailInfoProps) => {
+function QuickLinksDetailInfo(props: QuickLinksDetailInfoProps) {
   const { className = '', data, accessData, ...otherProps } = props;
   return (
     <div className={`${styles.root} ${className}`} {...otherProps}>
@@ -56,6 +56,6 @@ const QuickLinksDetailInfo = (props: QuickLinksDetailInfoProps) => {
       </div>
     </div>
   );
-};
+}
 
 export default QuickLinksDetailInfo;

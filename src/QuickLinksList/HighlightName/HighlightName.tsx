@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import type { MatchStatus } from '../../utils/stringMatch';
+import * as React from 'react';
+import { useMemo } from 'react';
 import styles from './HighlightName.module.less';
-import { MatchStatus } from '../../utils/stringMatch';
 
 export interface HighlightNameProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
   value?: string;
@@ -8,7 +9,7 @@ export interface HighlightNameProps extends Omit<React.HTMLAttributes<HTMLDivEle
 }
 
 // ... existing code ...
-const HighlightName = (props: HighlightNameProps) => {
+function HighlightName(props: HighlightNameProps) {
   const { className = '', value, match, ...otherProps } = props;
 
   const content = useMemo(() => {
@@ -36,12 +37,11 @@ const HighlightName = (props: HighlightNameProps) => {
     return value;
   }, [value, match]);
 
-
   return (
     <div className={`${styles.root} ${className}`} {...otherProps}>
       {content}
     </div>
   );
-};
+}
 
 export default HighlightName;

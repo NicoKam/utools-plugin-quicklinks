@@ -12,7 +12,8 @@ export default function Read({ enterAction }) {
       title: '选择文件',
       properties: ['openFile'],
     });
-    if (!files) return;
+    if (!files)
+      return;
     const filePath = files[0];
     setFilePath(filePath);
     try {

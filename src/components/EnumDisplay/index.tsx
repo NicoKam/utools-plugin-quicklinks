@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import * as React from 'react';
+import { useMemo } from 'react';
 
 export interface EnumDisplayProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
   value?: any;
@@ -7,7 +8,7 @@ export interface EnumDisplayProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   emptyHolder?: ReactNode;
 }
 
-const EnumDisplay = (props: EnumDisplayProps) => {
+function EnumDisplay(props: EnumDisplayProps) {
   const { value, enums = [], emptyHolder = '-', className = '', ...otherProps } = props;
 
   const target = useMemo(() => enums.find(item => item.value === value), [enums, value]);
@@ -19,6 +20,6 @@ const EnumDisplay = (props: EnumDisplayProps) => {
       {text}
     </div>
   );
-};
+}
 
 export default EnumDisplay;

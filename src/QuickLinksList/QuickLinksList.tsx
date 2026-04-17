@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IQuickLinksItem } from '../storage';
 import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { Form, Input, message, Radio, Select } from 'antd';
-import React, { useRef } from 'react';
+import * as React from 'react';
+import { useRef } from 'react';
 import ButtonWithIcon from '../components/ButtonWithIcon';
 import FormModal from '../components/FormModal';
-import { IQuickLinksItem } from '../storage';
 import { CmdKey } from './const';
 import FooterLayout from './FooterLayout';
 import HighlightName from './HighlightName';
@@ -21,7 +21,7 @@ export interface QuickLinksListProps extends Omit<React.HTMLAttributes<HTMLDivEl
 
 }
 
-const QuickLinksList = (props: QuickLinksListProps) => {
+function QuickLinksList(props: QuickLinksListProps) {
   const {
     className = '',
     ...otherProps
@@ -54,11 +54,9 @@ const QuickLinksList = (props: QuickLinksListProps) => {
 
   const detailRef = useRef<HTMLDivElement>(null);
 
-
   const modal = useGlobalModal();
 
   const modalOpen = modal.isOpen;
-
 
   // 分组切换处理
   const handleGroupChange = useMemoizedFn((groupId: string) => {
@@ -80,7 +78,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       setSelectIndex(currentIndex);
     }
 
-    if (modal.isOpen) return;
+    if (modal.isOpen)
+      return;
 
     if (currentItem) {
       if (currentItem.type === 'snippet') {
@@ -116,7 +115,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
   const addOrEditItem = async (isEdit = false) => {
     const currentId = currentItem?.id;
 
-    if (isEdit && !currentId) return;
+    if (isEdit && !currentId)
+      return;
 
     const initialValue = isEdit ? currentItem : { type: 'link' };
 
@@ -161,7 +161,8 @@ const QuickLinksList = (props: QuickLinksListProps) => {
                     },
                   ]}
                 >
-                  {type === 'link' ? <Input placeholder="请输入链接" />
+                  {type === 'link'
+                    ? <Input placeholder="请输入链接" />
                     : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
                 </Form.Item>
               );
@@ -205,14 +206,14 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     }
   };
 
-
   const copyItem = () => {
     // 如果当前聚焦的元素在 detail 内，且有选中内容，则不进行额外的复制操作
     if (
-      detailRef.current?.contains(document.activeElement as Node) &&
-      window.getSelection()
+      detailRef.current?.contains(document.activeElement as Node)
+      && window.getSelection()
         ?.toString()
-        .trim()) {
+        .trim()
+    ) {
       return;
     }
     if (currentItem) {
@@ -220,7 +221,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       message.success(`已复制【${currentItem.name}】的值`, 1);
     }
   };
-
 
   const importExportData = async () => {
     const result = await modal.open<{ value: string; importType: 'replace' | 'merge' }>(
@@ -262,7 +262,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     }
   };
 
-
   // 当选中的元素变化时，自动滚动当视窗内
   useUpdateEffect(() => {
     if (selectedIndex >= 0) {
@@ -275,9 +274,7 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     }
   }, [selectedIndex]);
 
-
   const mainActionText = currentItem?.type === 'snippet' ? '粘贴内容' : '打开链接';
-
 
   // 分组切换逻辑
   const handleTabSwitch = useMemoizedFn((prev: boolean) => {
@@ -303,7 +300,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
     },
     enable: !modalOpen,
   });
-
 
   return (
     <FooterLayout className={`${styles.root} ${className}`} footerClassName={styles.footer} {...otherProps}>
@@ -375,7 +371,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
         />
       </div>
 
-
       <FooterLayout.Footer position="left">
         {!modalOpen && (
           <>
@@ -426,6 +421,6 @@ const QuickLinksList = (props: QuickLinksListProps) => {
       <GlobalModalInstance />
     </FooterLayout>
   );
-};
+}
 
 export default QuickLinksList;

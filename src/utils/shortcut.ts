@@ -1,13 +1,13 @@
+import type { Target } from 'ahooks/lib/useEventListener';
 import { useEventListener } from 'ahooks';
-import { Target } from 'ahooks/lib/useEventListener';
 
-type Options<T extends Target = Target> = {
+interface Options<T extends Target = Target> {
   target?: T;
   capture?: boolean;
   once?: boolean;
   passive?: boolean;
   enable?: boolean;
-};
+}
 
 // Define the allowed key mappings for shortcuts
 const allowKeyMap: Record<string, string> = {
@@ -123,7 +123,8 @@ export function normalizeHotkey(event: KeyboardEvent) {
 
   const keyStr = allowKeyMap[event.code];
 
-  if (keyStr) keys.push(keyStr);
+  if (keyStr)
+    keys.push(keyStr);
 
   if (keyStr) {
     return keys;

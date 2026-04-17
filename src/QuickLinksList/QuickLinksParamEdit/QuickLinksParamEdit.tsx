@@ -1,11 +1,13 @@
-import { useControllableValue, useDebounce, useSafeState } from 'ahooks';
-import React, { forwardRef, useState } from 'react';
+import type { QuickLinksModalProps } from '../../components/QuickLinksModal';
 import { EnterOutlined } from '@ant-design/icons';
-import EditableDiv from '../../components/EditableDiv';
-import QuickLinksModal, { QuickLinksModalProps } from '../../components/QuickLinksModal';
-import styles from './QuickLinksParamEdit.module.less';
-import FooterLayout from '../FooterLayout';
+import { useControllableValue, useDebounce } from 'ahooks';
+import * as React from 'react';
+import { useState } from 'react';
 import ButtonWithIcon from '../../components/ButtonWithIcon';
+import EditableDiv from '../../components/EditableDiv';
+import QuickLinksModal from '../../components/QuickLinksModal';
+import FooterLayout from '../FooterLayout';
+import styles from './QuickLinksParamEdit.module.less';
 
 const emptyObj = {} as never;
 
@@ -17,12 +19,11 @@ export interface QuickLinksParamEditProps extends Omit<React.HTMLAttributes<HTML
 
 export const PARAM_REGEX = /\{([^}]+)\}/g;
 
-export const hasParams = (template: string) => /\{[^}]+\}/g.test(template);
+export const hasParams = (template: string) => /\{[^}]+\}/.test(template);
 
 export const replaceParams = (template: string, params: Record<string, string>) => template.replace(PARAM_REGEX, (match, name) => params[name] || '');
 
-
-const QuickLinksParamEdit = (props: QuickLinksParamEditProps) => {
+function QuickLinksParamEdit(props: QuickLinksParamEditProps) {
   const { template = '', value: propsValue, className, onChange, ...otherProps } = props;
 
   const [value = emptyObj, setValue] = useControllableValue<Record<string, string>>(props);
@@ -49,7 +50,9 @@ const QuickLinksParamEdit = (props: QuickLinksParamEditProps) => {
               className={`${styles.param}`}
               value={paramValue}
               stopPropagationWhenEditing={false}
-              onChange={(newValue) => { handleParamChange(paramName, newValue); }}
+              onChange={(newValue) => {
+                handleParamChange(paramName, newValue);
+              }}
               triggerOnInput
             />
           );
@@ -60,7 +63,7 @@ const QuickLinksParamEdit = (props: QuickLinksParamEditProps) => {
       })}
     </span>
   );
-};
+}
 
 export default QuickLinksParamEdit;
 
@@ -69,12 +72,10 @@ export interface QuickLinksParamEditModalProps extends Omit<QuickLinksModalProps
   onOk?: (value: string) => void;
 }
 
-
-export const QuickLinksParamEditModal = (props: QuickLinksParamEditModalProps) => {
+export function QuickLinksParamEditModal(props: QuickLinksParamEditModalProps) {
   const { template, open, onOk, ...otherProps } = props;
 
   const delayOpen = useDebounce(open);
-
 
   const [params, setParams] = useState({});
   const handleOk = () => {
@@ -107,4 +108,4 @@ export const QuickLinksParamEditModal = (props: QuickLinksParamEditModalProps) =
       </FooterLayout.Footer>
     </QuickLinksModal>
   );
-};
+}

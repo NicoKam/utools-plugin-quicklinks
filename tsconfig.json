@@ -1,39 +1,41 @@
 {
   "compilerOptions": {
-    "types": [
-      "utools-api-types"
-    ],
     "target": "ESNext",
-    "useDefineForClassFields": true,
+    "jsx": "react-jsx",
     "lib": [
       "DOM",
       "DOM.Iterable",
       "ESNext"
     ],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "types": [
+      "react",
+      "react-dom",
+      "utools-api-types"
+    ],
+    "allowJs": false,
+    "strict": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
     "plugins": [
       {
         "name": "typescript-plugin-css-modules"
       }
     ]
   },
-  "include": [
-    "src"
-  ],
   "references": [
     {
       "path": "./tsconfig.node.json"
     }
+  ],
+  "include": [
+    "src"
   ]
 }

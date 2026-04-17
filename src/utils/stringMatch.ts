@@ -29,7 +29,7 @@ export function genStringMatchFn(
   sentence: string,
 ): (keyword: string) => MatchStatus[] | null {
   // 拆分单词和 split
-  const wordAndSplit = sentence.split(/(\w+|[\u4e00-\u9fa5])/g);
+  const wordAndSplit = sentence.split(/(\w+|[\u4E00-\u9FA5])/g);
 
   // 为每一个单词或 split 生成一个捕获
   const regExpStr = wordAndSplit
@@ -76,7 +76,7 @@ export function genChineseMatchFn(
   sentence: string,
 ): (keyword: string) => MatchStatus[] | null {
   // 先检查是否包含拼音
-  const pinyinSplit = sentence.split(/([\u4e00-\u9fa5]+)/);
+  const pinyinSplit = sentence.split(/([\u4E00-\u9FA5]+)/);
   if (pinyinSplit.length < 2) {
     // 不包含拼音
     return genStringMatchFn(sentence);

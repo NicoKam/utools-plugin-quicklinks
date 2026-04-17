@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useControllableValue, useEventListener } from 'ahooks';
 import { useMergedRefs } from '@orca-fe/hooks';
+import { useControllableValue, useEventListener } from 'ahooks';
 import cn from 'classnames';
+import * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './EditableDiv.module.less';
 
 function selectDom(dom: HTMLElement) {

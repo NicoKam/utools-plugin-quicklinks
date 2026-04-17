@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 export const [useGlobalModal] = createGlobalStore(() => usePromisifyModal());
 
-export const GlobalModalInstance = () => {
+export function GlobalModalInstance() {
   const modal = useGlobalModal();
 
   useEffect(() => {
@@ -14,4 +14,4 @@ export const GlobalModalInstance = () => {
   }, [modal]);
   // eslint-disable-next-line react/react-in-jsx-scope
   return <>{modal.instance}</>;
-};
+}

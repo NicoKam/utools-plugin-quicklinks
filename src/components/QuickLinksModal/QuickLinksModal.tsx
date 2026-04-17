@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react';
 import { CloseOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import cn from 'classnames';
-import React, { ReactNode, useRef } from 'react';
+import * as React from 'react';
+import { useRef } from 'react';
 import { useShortCutListener } from '../../utils/shortcut';
 import styles from './QuickLinksModal.module.less';
 
@@ -15,7 +17,7 @@ export interface QuickLinksModalProps extends
   onCancel?: () => void;
 }
 
-const QuickLinksModal = (props: QuickLinksModalProps) => {
+function QuickLinksModal(props: QuickLinksModalProps) {
   const { className = '', open, title, onOk = ef, onCancel = ef, children, ...otherProps } = props;
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -28,13 +30,23 @@ const QuickLinksModal = (props: QuickLinksModalProps) => {
 
   return (
     <>
-      <div className={cn(styles.backdrop, { [styles.open]: open })} onClick={() => { onCancel(); }} />
+      <div
+        className={cn(styles.backdrop, { [styles.open]: open })}
+        onClick={() => {
+          onCancel();
+        }}
+      />
       <div tabIndex={-1} ref={rootRef} className={cn(styles.root, className, { [styles.open]: open })} {...otherProps}>
         <div className={styles.header}>
           <div className={styles.title}>
             {title}
           </div>
-          <div className={styles.close} onClick={() => { onCancel(); }}>
+          <div
+            className={styles.close}
+            onClick={() => {
+              onCancel();
+            }}
+          >
             <Button color="default" variant="text" icon={<CloseOutlined />} />
           </div>
         </div>
@@ -44,6 +56,6 @@ const QuickLinksModal = (props: QuickLinksModalProps) => {
       </div>
     </>
   );
-};
+}
 
 export default QuickLinksModal;
