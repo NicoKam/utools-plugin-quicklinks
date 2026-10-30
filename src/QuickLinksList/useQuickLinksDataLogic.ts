@@ -11,13 +11,15 @@ import {
   useQuickLinksGroupsState,
   useRemoteGroupCacheState,
   useSelectedGroupState,
+  validateQuickLinks,
 } from '../storage';
 import { randomString } from '../utils/randomString';
-import { genChineseMatchFn } from '../utils/stringMatch';
+import { genChineseMatchFn, genContentMatchFn } from '../utils/stringMatch';
 import useSecondaryConfirm from '../utils/useSecondaryConfirm';
 import { useSelectIndexWithKeyboard } from '../utils/useSelectIndex';
 import useSubInput from '../utils/useSubInput';
 import { CmdKey } from './const';
+import { getQuickLinkDisplayName } from './utils';
 
 const newId = () => `quick_${randomString(12)}`;
 
@@ -26,10 +28,15 @@ function genRemoteId(groupId: string, item: IQuickLinksItem) {
 }
 
 function addMatch(data: IQuickLinksItem[]) {
-  return data.map(item => ({
-    ...item,
-    matchFn: genChineseMatchFn(item.name),
-  }));
+  return data.map((item) => {
+    const displayName = getQuickLinkDisplayName(item);
+    return {
+      ...item,
+      displayName,
+      matchFn: genChineseMatchFn(displayName),
+      valueMatchFn: item.type !== 'snippet' ? genContentMatchFn(item.value) : undefined,
+    };
+  });
 }
 
 // 辅助函数：判断时间所属范围
@@ -115,24 +122,20 @@ export default function useQuickLinksDataLogic() {
     if (subInput) {
       return groupFilteredData
         .map((item) => {
-          const { matchFn } = item;
-          const match = matchFn?.(subInput);
-          if (match) {
-            return {
-              ...item,
-              match,
-            };
-          }
+          const match = item.matchFn(subInput);
+          const valueMatch = item.valueMatchFn?.(subInput);
           return {
             ...item,
-            match: false,
+            match: match || false,
+            valueMatch: valueMatch || false,
           };
         })
-        .filter(item => Boolean(item.match));
+        .filter(item => Boolean(item.match || item.valueMatch));
     }
     return groupFilteredData.map(item => ({
       ...item,
       match: false,
+      valueMatch: false,
     }));
   }, [subInput, groupFilteredData]);
 
@@ -267,6 +270,8 @@ export default function useQuickLinksDataLogic() {
     newData: IQuickLinksItem[],
     mode: 'replace' | 'merge',
   ) => {
+    if (!validateQuickLinks(newData))
+      throw new Error('Invalid quick links data');
     if (mode === 'replace') {
       clearAccessData();
       const newDataWithId = newData.map(item => ({
@@ -341,13 +346,7 @@ export default function useQuickLinksDataLogic() {
         const remoteData = await response.json();
 
         // 验证远程数据格式
-        if (
-          Array.isArray(remoteData)
-          && remoteData.every(
-            item =>
-              typeof item.name === 'string' && typeof item.value === 'string',
-          )
-        ) {
+        if (validateQuickLinks(remoteData)) {
           // 为远程数据添加ID
           const processedData = remoteData.map(item => ({
             ...item,

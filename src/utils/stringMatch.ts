@@ -22,6 +22,20 @@ export interface MatchStatus {
   end: number;
 }
 
+/** 链接地址和文件路径先按片段匹配，再使用现有模糊和拼音匹配。 */
+export function genContentMatchFn(sentence: string) {
+  const fuzzyMatch = genChineseMatchFn(sentence);
+  return (keyword: string): MatchStatus[] | null => {
+    if (!keyword)
+      return null;
+    const matches = Array.from(sentence.matchAll(new RegExp(escapeWord(keyword), 'gi')));
+    if (matches.length) {
+      return matches.map(match => ({ start: match.index!, end: match.index! + match[0].length - 1 }));
+    }
+    return fuzzyMatch(keyword);
+  };
+}
+
 /**
  * 根据语句生成匹配函数
  */

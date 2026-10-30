@@ -19,9 +19,7 @@ export default function useSubInput(options: UseSubInputOptions = {}) {
     window.utools?.setSubInput(({ text }) => {
       setSubInput(text);
     }, placeholder, isFocus);
-    if (!clear) {
-      window.utools?.setSubInputValue(subInput);
-    }
+    window.utools?.setSubInputValue(clear ? '' : subInput);
   });
 
   const disconnectSubInput = useMemoizedFn(() => {

@@ -90,7 +90,7 @@ export function QuickLinksParamEditModal(props: QuickLinksParamEditModalProps) {
       {...otherProps}
       open={open}
       onOk={handleOk}
-      okText="打开链接"
+      okText="打开"
       okIcon={<EnterOutlined />}
       okShortcuts="Enter"
     >

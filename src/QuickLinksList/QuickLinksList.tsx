@@ -1,13 +1,18 @@
+import type { ForegroundApp } from '../editorSettings';
 import type { IQuickLinksItem } from '../storage';
-import { EnterOutlined, ImportOutlined } from '@ant-design/icons';
+import { CodeOutlined, EnterOutlined, ImportOutlined, SettingOutlined } from '@ant-design/icons';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
-import { Form, Input, message, Radio, Select } from 'antd';
+import { Alert, Form, Input, message, Radio, Select } from 'antd';
 import * as React from 'react';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BaseLayoutFormModal from '../components/BaseLayoutFormModal';
 import ButtonWithIcon from '../components/ButtonWithIcon';
+import { getEditorSettings, matchForegroundEditor, resolveEditor, setEditorSettings as saveEditorSettings, validateCodeLocation } from '../editorSettings';
+import { watchDocumentVisible } from '../utils/watchDocumentVisible';
 import BaseLayout from './BaseLayout';
+import CodePreview from './CodePreview';
 import { CmdKey } from './const';
+import EditorSettings from './EditorSettings';
 import HighlightName from './HighlightName';
 import QuickLinksDetailInfo from './QuickLinksDetailInfo';
 import QuickLinksGroup from './QuickLinksGroup';
@@ -53,6 +58,69 @@ function QuickLinksList(props: QuickLinksListProps) {
   const isRemote = currentItemGroup?.type === 'remote';
 
   const detailRef = useRef<HTMLDivElement>(null);
+  const [editorSettings, setEditorSettings] = useState(getEditorSettings);
+  const [foregroundApp, setForegroundApp] = useState<ForegroundApp | null>(null);
+  const openingRef = useRef(false);
+  const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let request = 0;
+    const refreshForeground = (action?: unknown) => {
+      if (!active)
+        return;
+      if (action)
+        window.services?.captureInvocationApp?.(action);
+      const currentRequest = ++request;
+      window.services?.getInvocationApp?.().then((app) => {
+        if (!active || currentRequest !== request)
+          return;
+        if (app) {
+          setForegroundApp(app);
+          return;
+        }
+        // The native helper can be too early during plugin startup. An empty
+        // result is not cached by preload, so retry once before falling back.
+        window.services?.getInvocationApp?.().then((retryApp) => {
+          if (active && currentRequest === request)
+            setForegroundApp(retryApp);
+        }).catch(() => {
+          if (active && currentRequest === request)
+            setForegroundApp(null);
+        });
+      }).catch(() => {
+        if (active && currentRequest === request)
+          setForegroundApp(null);
+      });
+    };
+    window.utools?.onPluginEnter(refreshForeground);
+    const stopWatchingVisibility = watchDocumentVisible(document, () => {
+      window.services?.logInvocationAppDebug?.('frontend-visible', { visibilityState: document.visibilityState });
+      refreshForeground({ type: 'visibility', code: 'quicklinks' });
+    });
+    refreshForeground();
+    return () => {
+      active = false;
+      stopWatchingVisibility();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (currentItem?.type !== 'code')
+      return;
+    const matchedEditor = editorSettings.followFrontEditor !== false
+      ? matchForegroundEditor(foregroundApp, editorSettings)
+      : undefined;
+    const resolvedEditor = resolveEditor(currentItem.editorId, editorSettings, foregroundApp);
+    window.services?.logInvocationAppDebug?.('frontend-resolution', {
+      foregroundApp,
+      followFrontEditor: editorSettings.followFrontEditor !== false,
+      bookmarkEditorId: currentItem.editorId,
+      matchedEditorId: matchedEditor?.id,
+      resolvedEditorId: resolvedEditor.id,
+      fallbackToDefault: !editorSettings.editors.some(tool => tool.id === currentItem.editorId) && !matchedEditor,
+    });
+  }, [currentItem?.editorId, currentItem?.type, editorSettings, foregroundApp]);
 
   const modal = useGlobalModal();
 
@@ -78,11 +146,40 @@ function QuickLinksList(props: QuickLinksListProps) {
       setSelectIndex(currentIndex);
     }
 
-    if (modal.isOpen)
+    if (modal.isOpen || openingRef.current)
       return;
 
     if (currentItem) {
-      if (currentItem.type === 'snippet') {
+      if (currentItem.type === 'code') {
+        openingRef.current = true;
+        setOpening(true);
+        try {
+          validateCodeLocation(currentItem.value);
+          if (!window.services?.open)
+            throw new Error('请在 uTools 中打开代码书签');
+          const app = await window.services.getInvocationApp?.().catch(() => null);
+          const tool = resolveEditor(currentItem.editorId, editorSettings, app);
+          window.services.logInvocationAppDebug?.('frontend-open', {
+            foregroundApp: app,
+            followFrontEditor: editorSettings.followFrontEditor !== false,
+            bookmarkEditorId: currentItem.editorId,
+            matchedEditorId: matchForegroundEditor(app, editorSettings)?.id,
+            resolvedEditorId: tool.id,
+          });
+          await window.services.open({
+            path: currentItem.value,
+            label: currentItem.displayName,
+            tool,
+          });
+          setSelectIndex(0);
+          markAccessAndExit(currentItem.id);
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : '编辑器打开失败');
+        } finally {
+          openingRef.current = false;
+          setOpening(false);
+        }
+      } else if (currentItem.type === 'snippet') {
         // snippet 执行粘贴
         window.utools?.hideMainWindowPasteText(currentItem.value);
         markAccessAndExit(currentItem.id);
@@ -118,7 +215,17 @@ function QuickLinksList(props: QuickLinksListProps) {
     if (isEdit && !currentId)
       return;
 
-    const initialValue = isEdit ? currentItem : { type: 'link' };
+    const initialValue = isEdit
+      ? {
+        ...currentItem,
+        type: currentItem?.type ?? 'link',
+        editorId: editorSettings.editors.some(tool => tool.id === currentItem?.editorId) ? currentItem?.editorId : 'default',
+      }
+      : {
+        type: 'link',
+        editorId: 'default',
+        groupId: groups.find(group => group.id === selectedGroupId && group.type === 'default')?.id,
+      };
 
     window.utools?.subInputBlur();
     const okName = isEdit ? '编辑' : '添加';
@@ -128,22 +235,22 @@ function QuickLinksList(props: QuickLinksListProps) {
 
     const result = await modal.open<IQuickLinksItem & { groupId?: string }>(
       <BaseLayoutFormModal title={okName} initialValues={initialValue} okText={okName} cancelText="取消" formProps={{ style: { maxWidth: 800, margin: 'auto' } }}>
-        <Form.Item
-          name="name"
-          label="名称"
-          rules={[
-            {
-              required: true,
-              message: '请输入名称',
-            },
-          ]}
-        >
-          <Input placeholder="请输入名称" autoFocus />
+        <Form.Item noStyle dependencies={['type']}>
+          {({ getFieldValue }) => (
+            <Form.Item
+              name="name"
+              label="名称"
+              rules={[{ required: getFieldValue('type') !== 'code', message: '请输入名称' }]}
+            >
+              <Input placeholder={getFieldValue('type') === 'code' ? '可选，留空使用文件名' : '请输入名称'} autoFocus />
+            </Form.Item>
+          )}
         </Form.Item>
         <Form.Item name="type" label="类型">
           <Radio.Group>
             <Radio.Button value="link">链接</Radio.Button>
             <Radio.Button value="snippet">文本片段</Radio.Button>
+            <Radio.Button value="code">代码书签</Radio.Button>
           </Radio.Group>
         </Form.Item>
         <Form.Item noStyle dependencies={['type']}>
@@ -157,17 +264,34 @@ function QuickLinksList(props: QuickLinksListProps) {
                   rules={[
                     {
                       required: true,
-                      message: type === 'link' ? '请输入链接' : '请输入文本片段',
+                      message: type === 'code' ? '请输入文件路径' : type === 'link' ? '请输入链接' : '请输入文本片段',
                     },
+                    ...(type === 'code'
+                      ? [{ validator: async (_: unknown, value: string) => {
+                        validateCodeLocation(value);
+                      } }]
+                      : []),
                   ]}
+                  extra={type === 'code' ? '填写本地文件的绝对路径，可在末尾追加 :行号，例如 /Users/you/project/file.ts:12' : undefined}
                 >
-                  {type === 'link'
-                    ? <Input placeholder="请输入链接" />
-                    : <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />}
+                  {type === 'snippet'
+                    ? <Input.TextArea rows={5} placeholder="请输入文本片段" style={{ fontFamily: 'monospace' }} />
+                    : <Input placeholder={type === 'code' ? '/Users/you/project/file.ts:12' : '请输入链接'} />}
                 </Form.Item>
               );
             }
           }
+        </Form.Item>
+        <Form.Item noStyle dependencies={['type']}>
+          {({ getFieldValue }) => getFieldValue('type') === 'code' && (
+            <Form.Item name="editorId" label="编辑器">
+              <Select options={[
+                { value: 'default', label: `使用全局设置（${resolveEditor(undefined, editorSettings, foregroundApp).name}）` },
+                ...editorSettings.editors.map(tool => ({ value: tool.id, label: tool.name })),
+              ]}
+              />
+            </Form.Item>
+          )}
         </Form.Item>
         {defaultGroups.length > 0 && (
           <Form.Item name="groupId" label="分组">
@@ -194,12 +318,23 @@ function QuickLinksList(props: QuickLinksListProps) {
     );
 
     if (result) {
-      if (isEdit) {
-        editItem(currentId!, result);
-        message.success('已修改', 1);
-      } else {
-        addItem(result);
-        message.success('添加成功', 1);
+      try {
+        result.editorId = result.type === 'code' ? result.editorId : undefined;
+        if (result.type === 'code') {
+          result.value = result.value.trim();
+          result.name = result.name?.trim() ?? '';
+        }
+        if (isEdit) {
+          editItem(currentId!, result);
+          message.success('已修改', 1);
+        } else {
+          addItem(result);
+          message.success('添加成功', 1);
+        }
+        handleGroupChange(selectedGroupId === 'all' ? 'all' : result.groupId || 'all');
+        connectSubInput(true);
+      } catch (error) {
+        message.error(`${isEdit ? '修改' : '添加'}失败：${error instanceof Error ? error.message : '内容保存失败，请重试'}`);
       }
     } else {
       message.warning('未创建内容');
@@ -218,11 +353,12 @@ function QuickLinksList(props: QuickLinksListProps) {
     }
     if (currentItem) {
       window.utools?.copyText(currentItem.value);
-      message.success(`已复制【${currentItem.name}】的值`, 1);
+      message.success(`已复制【${currentItem.displayName}】的值`, 1);
     }
   };
 
   const importExportData = async () => {
+    window.utools?.subInputBlur();
     const result = await modal.open<{ value: string; importType: 'replace' | 'merge' }>(
       <BaseLayoutFormModal
         title="导入导出"
@@ -234,9 +370,16 @@ function QuickLinksList(props: QuickLinksListProps) {
             name: item.name,
             type: item.type,
             value: item.value,
+            editorId: item.type === 'code' ? item.editorId : undefined,
           })), null, 2),
         }}
       >
+        <Alert
+          type="warning"
+          showIcon
+          message="代码书签可能包含本机绝对路径，分享导出内容前请检查或脱敏。"
+          style={{ marginBottom: 12 }}
+        />
         <Form.Item name="value" noStyle>
           <Input.TextArea placeholder="规则 JSON" rows={10} style={{ fontFamily: 'monospace' }} />
         </Form.Item>
@@ -263,6 +406,22 @@ function QuickLinksList(props: QuickLinksListProps) {
     }
   };
 
+  const openSettings = async () => {
+    window.utools?.subInputBlur();
+    const detectedApp = await window.services?.getInvocationApp?.().catch(() => null) ?? null;
+    setForegroundApp(detectedApp);
+    const settings = await modal.open<typeof editorSettings>(<EditorSettings settings={editorSettings} foregroundApp={detectedApp} />);
+    if (settings) {
+      try {
+        saveEditorSettings(settings);
+        setEditorSettings(settings);
+        message.success('全局设置已保存', 1);
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '设置保存失败');
+      }
+    }
+  };
+
   // 当选中的元素变化时，自动滚动当视窗内
   useUpdateEffect(() => {
     if (selectedIndex >= 0) {
@@ -275,7 +434,10 @@ function QuickLinksList(props: QuickLinksListProps) {
     }
   }, [selectedIndex]);
 
-  const mainActionText = currentItem?.type === 'snippet' ? '粘贴内容' : '打开链接';
+  const mainActionText = currentItem?.type === 'snippet' ? '粘贴' : '打开';
+  const hasEditorOverride = editorSettings.editors.some(tool => tool.id === currentItem?.editorId);
+  const followsForeground = !hasEditorOverride && editorSettings.followFrontEditor !== false && Boolean(matchForegroundEditor(foregroundApp, editorSettings));
+  const editorSource = hasEditorOverride ? '书签指定' : followsForeground ? undefined : '全局默认';
 
   // 分组切换逻辑
   const handleTabSwitch = useMemoizedFn((prev: boolean) => {
@@ -335,8 +497,11 @@ function QuickLinksList(props: QuickLinksListProps) {
                     } as React.CSSProperties}
                   >
                     <div className={styles.itemContent}>
-                      <HighlightName className={styles.name} value={item.name} match={item.match} />
-                      <div className={styles.tips} title={item.value}>{item.value}</div>
+                      <div className={styles.nameRow}>
+                        <HighlightName className={styles.name} value={item.displayName} match={item.match} title={item.displayName} />
+                        {item.type === 'code' && <CodeOutlined className={styles.codeIcon} title="代码书签" />}
+                      </div>
+                      <HighlightName className={styles.tips} title={item.value} value={item.value} match={item.valueMatch} />
                     </div>
                     {/* icon */}
                     <div className={styles.itemTips}>
@@ -351,11 +516,15 @@ function QuickLinksList(props: QuickLinksListProps) {
 
           {currentItem && (
             <div className={styles.detail} ref={detailRef} tabIndex={-1}>
-              <div className={styles.preview}>
-                {currentItem.value}
-              </div>
+              {currentItem.type === 'code'
+                ? <CodePreview value={currentItem.value} />
+                : (
+                  <div className={styles.preview}>
+                    {currentItem.value}
+                  </div>
+                )}
 
-              <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} />
+              <QuickLinksDetailInfo className={styles.info} data={currentItem} accessData={accessData[currentItem.id]} editorName={currentItem.type === 'code' ? resolveEditor(currentItem.editorId, editorSettings, foregroundApp).name : undefined} editorSource={editorSource} />
             </div>
           )}
         </div>
@@ -377,14 +546,16 @@ function QuickLinksList(props: QuickLinksListProps) {
           <>
             <ButtonWithIcon shortcuts={`${CmdKey}+N`} onClick={() => addOrEditItem()}>添加</ButtonWithIcon>
             <ButtonWithIcon icon={<ImportOutlined />} onClick={importExportData}>导入/导出</ButtonWithIcon>
+            <ButtonWithIcon icon={<SettingOutlined />} onClick={openSettings}>设置</ButtonWithIcon>
             <BaseLayout.Splitter />
             {currentItem && !isRemote && (
               <ButtonWithIcon
                 color={isDeleteConfirm ? 'red' : 'default'}
+                title={isDeleteConfirm ? '再次点击确认删除' : '删除当前内容'}
                 shortcuts={`${CmdKey}+R`}
                 onClick={removeCurrentItem}
               >
-                {isDeleteConfirm ? '再次确认删除' : '删除'}
+                {isDeleteConfirm ? '确认删除？' : '删除'}
               </ButtonWithIcon>
             )}
             {currentItem && !isRemote && <ButtonWithIcon shortcuts={`${CmdKey}+E`} onClick={() => addOrEditItem(true)}>编辑</ButtonWithIcon>}
@@ -395,12 +566,13 @@ function QuickLinksList(props: QuickLinksListProps) {
                   copyItem();
                 }}
               >
-                复制内容
+                复制
               </ButtonWithIcon>
             )}
             {currentItem && (
               <ButtonWithIcon
                 icon={<EnterOutlined />}
+                loading={opening}
                 shortcuts="Enter"
                 onClick={() => {
                   mainAction();

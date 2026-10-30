@@ -2,17 +2,14 @@ import { useEffect, useState } from 'react';
 
 export default function useDarkThemeMode() {
   // 状态管理当前主题
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // 检测系统主题偏好
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-    // 设置初始主题
-    setDarkMode(mediaQuery.matches);
-
     // 监听系统主题变化
-    const handleThemeChange = (e) => {
+    const handleThemeChange = (e: MediaQueryListEvent) => {
       setDarkMode(e.matches);
     };
 

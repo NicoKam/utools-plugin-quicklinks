@@ -1,0 +1,61 @@
+.root {
+  --code-background: #fff;
+  --code-gutter-background: #f6f8fa;
+  --code-line-highlight: rgba(88, 164, 246, 0.12);
+  --code-gutter-text: #6a737d;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+}
+
+.path {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+.language {
+  color: #999;
+  font-size: 10px;
+}
+
+.status {
+  padding: 20px 12px;
+  color: #999;
+  font-size: 12px;
+}
+
+.notice {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #999;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--code-background);
+}
+
+.root[data-theme='dark'] {
+  --code-background: #0d1117;
+  --code-gutter-background: #161b22;
+  --code-gutter-text: #8b949e;
+}

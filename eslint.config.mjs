@@ -18,6 +18,8 @@ export default antfu(
       'node_modules/',
       '*.d.ts',
       'AGENTS.md',
+      'public/preload/command-template.cjs',
+      'public/preload/location.cjs',
     ],
   },
 

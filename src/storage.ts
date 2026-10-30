@@ -1,6 +1,8 @@
+import type { SetStateAction } from 'react';
 import { useMemoizedFn, useUpdateEffect } from 'ahooks';
 import { createGlobalStore } from 'hox';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { validateCodeLocation } from './editorSettings';
 
 /**
  * 快捷链接数据
@@ -9,7 +11,8 @@ export interface IQuickLinksItem {
   id: string;
   name: string;
   value: string;
-  type?: 'link' | 'snippet';
+  type?: 'link' | 'snippet' | 'code';
+  editorId?: string;
   groupId?: string;
 }
 
@@ -60,8 +63,17 @@ export function validateQuickLinks(
   }
 
   for (const item of quickLinks) {
-    if (typeof item.name !== 'string' || typeof item.value !== 'string') {
+    if (!item || typeof item !== 'object' || typeof item.name !== 'string' || typeof item.value !== 'string'
+      || (item.type !== undefined && !['link', 'snippet', 'code'].includes(item.type))
+      || (item.editorId !== undefined && typeof item.editorId !== 'string')) {
       return false;
+    }
+    if (item.type === 'code') {
+      try {
+        validateCodeLocation(item.value);
+      } catch {
+        return false;
+      }
     }
   }
 
@@ -85,18 +97,24 @@ export function getQuickLinksData(): IQuickLinksItem[] {
  * @param quickLinks 快捷链接数据
  */
 export function setQuickLinksData(quickLinks: IQuickLinksItem[]) {
-  window.utools?.dbStorage.setItem(QUICK_LINKS_STORAGE_KEY, quickLinks);
+  if (!window.utools?.dbStorage)
+    throw new Error('请在 uTools 中保存内容');
+  window.utools.dbStorage.setItem(QUICK_LINKS_STORAGE_KEY, quickLinks);
 }
 
 export function useQuickLinksDataState() {
   const [quickLinks, setQuickLinks]
     = useState<IQuickLinksItem[]>(getQuickLinksData);
+  const dataRef = useRef(quickLinks);
 
-  useUpdateEffect(() => {
-    setQuickLinksData(quickLinks);
-  }, [quickLinks]);
+  const persistQuickLinks = useMemoizedFn((action: SetStateAction<IQuickLinksItem[]>) => {
+    const nextData = typeof action === 'function' ? action(dataRef.current) : action;
+    setQuickLinksData(nextData);
+    dataRef.current = nextData;
+    setQuickLinks(nextData);
+  });
 
-  return [quickLinks, setQuickLinks] as const;
+  return [quickLinks, persistQuickLinks] as const;
 }
 
 export function getQuickLinksAccessData(): Record<
